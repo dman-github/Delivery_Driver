@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "635442040215",
+    "project_id": "okada-12ecb",
+    "storage_bucket": "okada-12ecb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635442040215:android:87f7b3bb42db2b64ca48d2",
+        "android_client_info": {
+          "package_name": "com.okada.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVv2HPUavgYG0MMToF9Ag5YYusp7_NCa0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
