@@ -33,3 +33,4 @@ replay_pid*
 .gradle/8.2/fileHashes/resourceHashesCache.bin
 .gradle/buildOutputCleanup/buildOutputCleanup.lock
 .gradle/buildOutputCleanup/outputFiles.bin
+assetWizardSettings.xml

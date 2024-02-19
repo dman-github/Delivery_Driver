@@ -13,10 +13,10 @@
         android:theme="@style/Theme.Okada"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".SplashScreenActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Okada">
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
