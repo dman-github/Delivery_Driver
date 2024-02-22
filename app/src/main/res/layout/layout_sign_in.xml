@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/splash_screen_okada"
+    android:theme="@style/LoginTheme"
     android:padding="16dp">
     
     <LinearLayout
@@ -16,10 +17,23 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:id="@+id/btn_email_sign_in"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/curved_button"
+            android:layout_gravity=""
+            android:text="@string/sign_in_email_message"
+            android:drawableStart="@drawable/baseline_email_24">
+        </Button>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_phone_sign_in"
             android:padding="16dp"
             android:background="@drawable/curved_button"
             android:layout_gravity=""
-            android:text="@string/sign_in_message"
+            android:text="@string/sign_in_phone_message"
             android:drawableStart="@drawable/baseline_email_24">
         </Button>
     </LinearLayout>

@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Okada</string>
-    <string name="sign_in_message">Sign in with Email</string>
+    <string name="sign_in_email_message">Sign in with Email</string>
+    <string name="sign_in_phone_message">Sign in with Phone</string>
 </resources>
