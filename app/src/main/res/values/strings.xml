@@ -2,4 +2,15 @@
     <string name="app_name">Okada</string>
     <string name="sign_in_email_message">Sign in with Email</string>
     <string name="sign_in_phone_message">Sign in with Phone</string>
+    <string name="continue_message">Continue</string>
+    <string name="register_message">Let\'s start with creating your account</string>
+    <string name="firstname_message">Firstname</string>
+    <string name="lastname_message">Lastname</string>
+    <string name="phone_num_message">Phone number</string>
+    <string name="email_address_message">Email Address</string>
+    <string name="id_num_message">ID number</string>
+    <string name="error_name">Error: </string>
+    <string name="error_firstname_message">Please enter firstname</string>
+    <string name="error_lastname_message">Please enter lastname</string>
+
 </resources>

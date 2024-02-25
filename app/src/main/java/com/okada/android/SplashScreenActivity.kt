@@ -3,12 +3,26 @@ package com.okada.android
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.TextUtils
+import android.util.Patterns
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.firebase.ui.auth.AuthMethodPickerLayout
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
+import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.okada.android.Model.DriverInfoModel
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Completable
 import java.util.concurrent.TimeUnit
@@ -23,7 +37,9 @@ class SplashScreenActivity : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var listener: FirebaseAuth.AuthStateListener
 
-
+    private lateinit var database: FirebaseDatabase
+    private lateinit var driverInfoRef: DatabaseReference
+    private lateinit var progressBar : ProgressBar
     override fun onStart() {
         super.onStart()
         delaySplashScreen()
@@ -45,29 +61,138 @@ class SplashScreenActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_splash_screen)
+        progressBar = findViewById(R.id.progress_bar)
         initialise()
     }
 
     private fun initialise() {
+        database = FirebaseDatabase.getInstance()
+        driverInfoRef = database.getReference(Common.DRIVER_INFO_REFERENCE)
+
         providers = arrayListOf(
             AuthUI.IdpConfig.EmailBuilder().build(),
             AuthUI.IdpConfig.PhoneBuilder().build()
         )
         firebaseAuth = FirebaseAuth.getInstance()
         listener = FirebaseAuth.AuthStateListener {instance ->
-            // This lis
             val user = instance.currentUser
             var userId = instance.uid
             if (user != null) {
-                Toast.makeText(this@SplashScreenActivity,
+                /*Toast.makeText(this@SplashScreenActivity,
                     "Welcome: New User, id: $userId", Toast.LENGTH_SHORT)
-                    .show();
+                    .show();*/
+                checkUserFromFirebase();
             } else {
-                print("About to show login")
                 showLoginLayout()
             }
         }
 
+    }
+
+    private fun checkUserFromFirebase() {
+        // Use Let to check Nullable types
+        FirebaseAuth.getInstance().currentUser?.uid?.let {
+            driverInfoRef
+                .child(it)
+                .addListenerForSingleValueEvent(object: ValueEventListener {
+                    override fun onDataChange(dataSnapShot: DataSnapshot) {
+                        if (dataSnapShot.exists()) {
+                            Toast.makeText(this@SplashScreenActivity,
+                                "User already registered!", Toast.LENGTH_SHORT)
+                                .show();
+                        } else {
+                            showRegisterLayout()
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Toast.makeText(this@SplashScreenActivity,
+                                  "Error: $error", Toast.LENGTH_SHORT)
+                                  .show();
+                    }
+
+                })
+        }
+    }
+
+    private fun showRegisterLayout() {
+        val builder = AlertDialog.Builder(this,R.style.DialogTheme)
+        val itemView = LayoutInflater.from(this).inflate(R.layout.layout_register, null)
+
+        val edt_first_name = findViewById<View>(R.id.edit_first_name) as TextInputEditText
+        val edt_last_name = findViewById<View>(R.id.edit_last_name) as TextInputEditText
+        val edt_email = findViewById<View>(R.id.email_address) as TextInputEditText
+        val edt_id = findViewById<View>(R.id.id_number) as TextInputEditText
+        val button_continue = findViewById<View>(R.id.btn_register) as Button
+
+        FirebaseAuth.getInstance().currentUser?.email?.let {email->
+            if (emailValidation(email)) {
+                // View
+                builder.setView(itemView)
+                val dialog = builder.create()
+                dialog.show()
+                //Event
+                button_continue.setOnClickListener {
+                    if (TextUtils.isDigitsOnly(edt_first_name.text.toString())) {
+                        Toast.makeText(
+                            this@SplashScreenActivity,
+                            "${R.string.error_name}: ${R.string.error_firstname_message}", Toast.LENGTH_SHORT)
+                            .show();
+                        return@setOnClickListener
+                    } else if (TextUtils.isDigitsOnly(edt_last_name.text.toString())) {
+                        Toast.makeText(
+                            this@SplashScreenActivity,
+                            "${R.string.error_name}: ${R.string.error_lastname_message}", Toast.LENGTH_SHORT)
+                            .show();
+                        return@setOnClickListener
+                    } else if (TextUtils.isDigitsOnly(edt_email.text.toString())) {
+                        Toast.makeText(
+                            this@SplashScreenActivity,
+                            "${R.string.error_name}: ${R.string.error_lastname_message}", Toast.LENGTH_SHORT)
+                            .show();
+                        return@setOnClickListener
+
+                    } else if (TextUtils.isDigitsOnly(edt_id.text.toString())) {
+                        Toast.makeText(
+                            this@SplashScreenActivity,
+                            "${R.string.error_name}: ${R.string.error_lastname_message}", Toast.LENGTH_SHORT)
+                            .show();
+                        return@setOnClickListener
+                    } else {
+                        var model = DriverInfoModel(edt_first_name.text.toString(),
+                            edt_last_name.text.toString(),
+                            edt_email.text.toString(),
+                            edt_id.text.toString(),
+                            1.0)
+
+                        FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
+                            driverInfoRef.child(uid)
+                                .setValue(model)
+                                .addOnFailureListener{e->
+                                    Toast.makeText(
+                                        this@SplashScreenActivity,
+                                        "${R.string.error_name}: ${e.message}", Toast.LENGTH_SHORT)
+                                        .show();
+                                    progressBar.visibility = View.GONE
+                                }.addOnSuccessListener {
+                                    Toast.makeText(
+                                        this@SplashScreenActivity,
+                                        "Registered Succesfully!", Toast.LENGTH_SHORT)
+                                        .show();
+                                    dialog.dismiss()
+                                    progressBar.visibility = View.GONE
+                                }
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
+    private fun emailValidation(email: String?): Boolean {
+        return Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
     private fun showLoginLayout() {

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Okada" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Okada" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/app_yellow</item>
+        <item name="colorPrimaryDark">@color/app_dark_yellow</item>
+        <item name="colorAccent">@color/black</item>
+    </style>
+
 
     <style name="LoginTheme" parent = "FirebaseUI">
         <item name="colorPrimary">@color/app_yellow</item>
