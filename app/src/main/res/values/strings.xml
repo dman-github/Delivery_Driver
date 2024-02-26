@@ -12,5 +12,7 @@
     <string name="error_name">Error: </string>
     <string name="error_firstname_message">Please enter firstname</string>
     <string name="error_lastname_message">Please enter lastname</string>
+    <string name="error_id_message">Please enter id</string>
+    <string name="error_email_message">Please enter email</string>
 
 </resources>

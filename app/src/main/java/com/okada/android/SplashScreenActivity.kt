@@ -120,11 +120,11 @@ class SplashScreenActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this,R.style.DialogTheme)
         val itemView = LayoutInflater.from(this).inflate(R.layout.layout_register, null)
 
-        val edt_first_name = findViewById<View>(R.id.edit_first_name) as TextInputEditText
-        val edt_last_name = findViewById<View>(R.id.edit_last_name) as TextInputEditText
-        val edt_email = findViewById<View>(R.id.email_address) as TextInputEditText
-        val edt_id = findViewById<View>(R.id.id_number) as TextInputEditText
-        val button_continue = findViewById<View>(R.id.btn_register) as Button
+        val edtFirstName = itemView.findViewById<View>(R.id.edit_first_name) as TextInputEditText
+        val edtLastName = itemView.findViewById<View>(R.id.edit_last_name) as TextInputEditText
+        val edtEmail = itemView.findViewById<View>(R.id.email_address) as TextInputEditText
+        val edtId = itemView.findViewById<View>(R.id.id_number) as TextInputEditText
+        val buttonContinue = itemView.findViewById<View>(R.id.btn_register) as Button
 
         FirebaseAuth.getInstance().currentUser?.email?.let {email->
             if (emailValidation(email)) {
@@ -133,46 +133,46 @@ class SplashScreenActivity : AppCompatActivity() {
                 val dialog = builder.create()
                 dialog.show()
                 //Event
-                button_continue.setOnClickListener {
-                    if (TextUtils.isDigitsOnly(edt_first_name.text.toString())) {
+                buttonContinue.setOnClickListener {
+                    if (TextUtils.isEmpty(edtFirstName.text.toString())) {
                         Toast.makeText(
                             this@SplashScreenActivity,
-                            "${R.string.error_name}: ${R.string.error_firstname_message}", Toast.LENGTH_SHORT)
+                            "${resources.getString(R.string.error_name)}: ${resources.getString(R.string.error_firstname_message)}", Toast.LENGTH_SHORT)
                             .show();
                         return@setOnClickListener
-                    } else if (TextUtils.isDigitsOnly(edt_last_name.text.toString())) {
+                    } else if (TextUtils.isEmpty(edtLastName.text.toString())) {
                         Toast.makeText(
                             this@SplashScreenActivity,
-                            "${R.string.error_name}: ${R.string.error_lastname_message}", Toast.LENGTH_SHORT)
+                            "${resources.getString(R.string.error_name)}: ${resources.getString(R.string.error_lastname_message)}", Toast.LENGTH_SHORT)
                             .show();
                         return@setOnClickListener
-                    } else if (TextUtils.isDigitsOnly(edt_email.text.toString())) {
+                    } else if (TextUtils.isEmpty(edtEmail.text.toString())) {
                         Toast.makeText(
                             this@SplashScreenActivity,
-                            "${R.string.error_name}: ${R.string.error_lastname_message}", Toast.LENGTH_SHORT)
+                            "${resources.getString(R.string.error_name)}: ${resources.getString(R.string.error_email_message)}", Toast.LENGTH_SHORT)
                             .show();
                         return@setOnClickListener
 
-                    } else if (TextUtils.isDigitsOnly(edt_id.text.toString())) {
+                    } else if (TextUtils.isEmpty(edtId.text.toString())) {
                         Toast.makeText(
                             this@SplashScreenActivity,
-                            "${R.string.error_name}: ${R.string.error_lastname_message}", Toast.LENGTH_SHORT)
+                            "${resources.getString(R.string.error_name)}: ${resources.getString(R.string.error_id_message)}", Toast.LENGTH_SHORT)
                             .show();
                         return@setOnClickListener
                     } else {
-                        var model = DriverInfoModel(edt_first_name.text.toString(),
-                            edt_last_name.text.toString(),
-                            edt_email.text.toString(),
-                            edt_id.text.toString(),
+                        var model = DriverInfoModel(edtFirstName.text.toString(),
+                            edtLastName.text.toString(),
+                            edtEmail.text.toString(),
+                            edtId.text.toString(),
                             1.0)
-
                         FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
-                            driverInfoRef.child(uid)
+                            model.uid = uid
+                            driverInfoRef.child("$uid")
                                 .setValue(model)
                                 .addOnFailureListener{e->
                                     Toast.makeText(
                                         this@SplashScreenActivity,
-                                        "${R.string.error_name}: ${e.message}", Toast.LENGTH_SHORT)
+                                        "${resources.getString(R.string.error_name)}: ${e.message}", Toast.LENGTH_SHORT)
                                         .show();
                                     progressBar.visibility = View.GONE
                                 }.addOnSuccessListener {
