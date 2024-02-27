@@ -168,13 +168,14 @@ class SplashScreenActivity : AppCompatActivity() {
                             .show();
                         return@setOnClickListener
                     } else {
-                        var model = DriverInfoModel(edtFirstName.text.toString(),
-                            edtLastName.text.toString(),
-                            edtEmail.text.toString(),
-                            edtId.text.toString(),
-                            1.0)
+                        var model = DriverInfoModel()
+                        model.firstName =  edtFirstName.text.toString()
+                        model.lastName = edtLastName.text.toString()
+                        model.email = edtEmail.text.toString()
+                        model.id = edtId.text.toString()
+                        model.rating = 0.0
+
                         FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
-                            model.uid = uid
                             driverInfoRef.child("$uid")
                                 .setValue(model)
                                 .addOnFailureListener{e->
