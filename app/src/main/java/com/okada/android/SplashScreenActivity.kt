@@ -98,9 +98,11 @@ class SplashScreenActivity : AppCompatActivity() {
                 .addListenerForSingleValueEvent(object: ValueEventListener {
                     override fun onDataChange(dataSnapShot: DataSnapshot) {
                         if (dataSnapShot.exists()) {
-                            Toast.makeText(this@SplashScreenActivity,
+                            /*Toast.makeText(this@SplashScreenActivity,
                                 "User already registered!", Toast.LENGTH_SHORT)
-                                .show();
+                                .show();*/
+                            val model = dataSnapShot.getValue(DriverInfoModel::class.java)
+                            gotoHomeActivity(model)
                         } else {
                             showRegisterLayout()
                         }
@@ -114,6 +116,12 @@ class SplashScreenActivity : AppCompatActivity() {
 
                 })
         }
+    }
+
+    private fun gotoHomeActivity(model: DriverInfoModel?) {
+        Common.currentUser = model
+        startActivity(Intent(this, DriverHomeActivity::class.java))
+        finish()
     }
 
     private fun showRegisterLayout() {
@@ -182,6 +190,7 @@ class SplashScreenActivity : AppCompatActivity() {
                                         .show();
                                     dialog.dismiss()
                                     progressBar.visibility = View.GONE
+                                    gotoHomeActivity(model)
                                 }
                         }
                     }

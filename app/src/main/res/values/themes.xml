@@ -14,7 +14,7 @@
         <item name="android:windowIsFloating">false</item>
     </style>
 
-    <style name="LoginTheme" parent = "FirebaseUI">
+    <style name="LoginTheme" parent="FirebaseUI">
         <item name="colorPrimary">@color/app_yellow</item>
         <item name="colorPrimaryDark">@color/app_dark_yellow</item>
         <item name="colorAccent">@color/black</item>
@@ -36,5 +36,14 @@
         <item name="android:windowFullscreen">true</item>
 
     </style>
+
+    <style name="Theme.Okada.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.Okada.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.Okada.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 </resources>
