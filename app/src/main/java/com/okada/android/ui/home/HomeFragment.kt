@@ -1,17 +1,21 @@
 package com.okada.android.ui.home
 
+import android.content.res.Resources
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.firebase.ui.auth.data.model.Resource
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.MarkerOptions
 import com.okada.android.R
 import com.okada.android.databinding.FragmentHomeBinding
@@ -59,7 +63,21 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.uiSettings.isZoomControlsEnabled = true
+        try {
+            val success = googleMap.setMapStyle(context?.let {
+                MapStyleOptions.loadRawResourceStyle(
+                    it, R.raw.maps_style)
+            })
+            if (!success) {
+                Log.e("App_Error", "Style parsing error")
+            } else {
+                Log.e("App_Success", "Style parsing error")
+            }
 
+        } catch (e:Resources.NotFoundException) {
+            Log.e("App_Error", e.message.toString())
+        }
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))

@@ -42,8 +42,12 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="Theme.Okada.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Theme.Okada.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:textColorPrimary">@color/black</item>
+    </style>
 
-    <style name="Theme.Okada.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="Theme.Okada.PopupOverlay" parent="ThemeOverlay.AppCompat.Light">
+        <item name="android:textColorPrimary">@color/white</item>
+    </style>
 
 </resources>
