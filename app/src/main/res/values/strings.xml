@@ -26,5 +26,5 @@
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
     <string name="title_activity_maps">MapsActivity</string>
-
+    <string name="rationale_message_for_location">App requires Location permissions to function</string>
 </resources>

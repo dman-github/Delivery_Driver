@@ -1,6 +1,7 @@
 package com.okada.android
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
@@ -12,6 +13,7 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.okada.android.databinding.ActivityDriverHomeBinding
+import com.vmadalin.easypermissions.EasyPermissions
 
 class DriverHomeActivity : AppCompatActivity() {
 

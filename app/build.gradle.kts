@@ -100,4 +100,13 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:22.3.1")
     implementation ("com.firebaseui:firebase-ui-auth:7.2.0")
     implementation("com.google.firebase:firebase-database:20.3.0")
+
+    //Easy permissions
+    implementation("com.vmadalin:easypermissions-ktx:1.0.0")
+
+    //Location
+    implementation("com.google.android.gms:play-services-location:21.1.0")
+
+    //Geofire
+    implementation("com.firebase:geofire-android:3.2.0")
 }
