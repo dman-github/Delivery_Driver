@@ -4,6 +4,7 @@ import android.Manifest
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.location.Location
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
@@ -13,6 +14,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.firebase.geofire.GeoFire
 import com.firebase.geofire.GeoLocation
@@ -43,6 +46,8 @@ import com.vmadalin.easypermissions.annotations.AfterPermissionGranted
 import com.vmadalin.easypermissions.dialogs.SettingsDialog
 
 class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionCallbacks {
+
+    private val viewModel: HomeViewModel by viewModels()
     private lateinit var mMap: GoogleMap
     private var _binding: FragmentHomeBinding? = null
     private lateinit var mapFragment: SupportMapFragment
@@ -50,11 +55,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var locationCallback: LocationCallback
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
-    // Online database
-    private lateinit var onlineRef: DatabaseReference
-    private lateinit var currentUserRef: DatabaseReference
-    private lateinit var driverLocationRef: DatabaseReference
-    private lateinit var geoFire: GeoFire
+
     companion object {
         private const val REQUEST_LOCATION_PERMISSION = 0x2233
     }
@@ -67,9 +68,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
-
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
         init()
@@ -84,14 +82,18 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
     private fun init() {
 
-        // Setting up Driver location DB
-        onlineRef = FirebaseDatabase.getInstance().reference.child(".info/connected")
-        driverLocationRef = FirebaseDatabase.getInstance().getReference(Common.DRIVER_LOCATION_REFERENCE)
-        FirebaseAuth.getInstance().currentUser?.uid?.let {
-            currentUserRef = FirebaseDatabase.getInstance().getReference(Common.DRIVER_LOCATION_REFERENCE).child(it)
+        // Create the observer which updates the UI.
+        val messageObserver = Observer<String?> { newMessage ->
+            newMessage?.let {message ->
+                mapFragment.view?.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+            }
         }
-        geoFire = GeoFire(driverLocationRef)
-        registerOnlineSystem()
+        val locationObs = Observer<LatLng> { newPos ->
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos,18f))
+        }
+        // Observe the LiveData, passing in this activity as the LifecycleOwner and the observer.
+        viewModel.showSnackbarMessage.observe(viewLifecycleOwner, messageObserver)
+        viewModel.updateMap.observe(viewLifecycleOwner, locationObs)
 
         // The google map builder
         locationRequest = LocationRequest.Builder(5000)
@@ -100,45 +102,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             .setMinUpdateIntervalMillis(3000).build()
 
         // Adding a location callback for the google map
-
         locationCallback = object: LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
-                locationResult.lastLocation?.latitude?.let {lat ->
-                    locationResult.lastLocation?.longitude?.let {long ->
-                        val newPos = LatLng(lat,long)
-                        Log.i("App_Info", "on:locationCallback Lat: $lat, Lon: $long")
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos,18f))
-
-                        //Update location in driver db
-                        FirebaseAuth.getInstance().currentUser?.uid?.let {
-                            geoFire.setLocation(it,
-                                GeoLocation(lat,long)) { _: String?, error: DatabaseError? ->
-                                    if (error != null) {
-                                        mapFragment.view?.let {view -> Snackbar.make(view, error.message, Snackbar.LENGTH_LONG).show() }
-                                    } else {
-                                        mapFragment.view?.let {view -> Snackbar.make(view, "Location updated", Snackbar.LENGTH_LONG).show() }
-                                    }
-                                }
-                        }
-                    }
-                }
+                viewModel.updateLocation(locationResult.lastLocation)
             }
         }
-
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
-    }
-
-    private val onlineValueEventListener = object: ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            if (snapshot.exists()) {
-                currentUserRef.onDisconnect().removeValue()
-            }
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            mapFragment.view?.let { Snackbar.make(it, error.message, Snackbar.LENGTH_LONG).show() }
-        }
     }
 
     override fun onResume() {
@@ -151,7 +121,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         } else {
             Log.i("App_Info", "onResume  NO permissions")
         }
-        registerOnlineSystem()
+        //registerOnlineSystem()
     }
     override fun onPause() {
         super.onPause()
@@ -163,14 +133,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        viewModel.clearMessage()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        FirebaseAuth.getInstance().currentUser?.uid.let {
-            geoFire.removeLocation(it)
-        }
-        onlineRef.removeEventListener(onlineValueEventListener)
+        viewModel.removeUserLocation()
+        //onlineRef.removeEventListener(onlineValueEventListener)
 
     }
 
@@ -197,9 +166,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         }
     }
 
-    private fun registerOnlineSystem() {
-        onlineRef.addValueEventListener(onlineValueEventListener)
-    }
+
 
     private fun processMapAfterPermissions() {
         if (ContextCompat.checkSelfPermission(requireContext(), ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -224,12 +191,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                         "Error: $e", Toast.LENGTH_SHORT
                     ).show();
                 }.addOnSuccessListener { lastLocation ->
-                    lastLocation?.latitude?.let { lat ->
-                        lastLocation?.longitude?.let { long ->
-                            val newPos = LatLng(lat, long)
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos, 18f))
-                        }
-                    }
+                    viewModel.updateLocation(lastLocation)
                 }
         }
     }
