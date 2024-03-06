@@ -109,4 +109,7 @@ dependencies {
 
     //Geofire
     implementation("com.firebase:geofire-android:3.2.0")
+
+    //Circular image view
+    implementation ("de.hdodenhof:circleimageview:3.1.0")
 }
