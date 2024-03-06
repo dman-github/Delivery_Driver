@@ -13,5 +13,6 @@
     <color name="app_dark_yellow">#A9B318</color>
     <color name="app_Light_grey">#D8D8D8</color>
     <color name="app_dark_grey">#646562</color>
+    <color name="app_red_dark">#ffcc0000</color>
 
 </resources>
