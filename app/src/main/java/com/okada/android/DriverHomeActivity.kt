@@ -15,6 +15,7 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -94,8 +95,10 @@ class DriverHomeActivity : AppCompatActivity() {
                 }
 
                 dialog.show()
+            } else {
+                drawerLayout.closeDrawer(GravityCompat.START)
             }
-            true
+            return@setNavigationItemSelectedListener true
         }
         val headerView = navView.getHeaderView(0)
         val text_name = headerView.findViewById<View>(R.id.txt_name) as TextView
