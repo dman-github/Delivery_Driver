@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -54,7 +55,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-
 
     companion object {
         private const val REQUEST_LOCATION_PERMISSION = 0x2233

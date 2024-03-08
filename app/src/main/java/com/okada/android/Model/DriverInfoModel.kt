@@ -2,9 +2,11 @@ package com.okada.android.Model
 
 class DriverInfoModel {
 
-    public var firstName = ""
-    public var lastName = ""
-    public var email = ""
-    public var id = ""
-    public var rating = 0.0
+    var firstName = ""
+    var lastName = ""
+    var email = ""
+    var id = ""
+    var rating = 0.0
+    var avatar = ""
+
 }

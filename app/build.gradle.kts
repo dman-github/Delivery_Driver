@@ -99,7 +99,8 @@ dependencies {
     //Firebase
     implementation("com.google.firebase:firebase-auth:22.3.1")
     implementation ("com.firebaseui:firebase-ui-auth:7.2.0")
-    implementation("com.google.firebase:firebase-database:20.3.0")
+    implementation("com.google.firebase:firebase-database:20.3.1")
+    implementation("com.google.firebase:firebase-storage:20.3.0")
 
     //Easy permissions
     implementation("com.vmadalin:easypermissions-ktx:1.0.0")
@@ -112,4 +113,8 @@ dependencies {
 
     //Circular image view
     implementation ("de.hdodenhof:circleimageview:3.1.0")
+
+    // Glide for loading images
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
 }
