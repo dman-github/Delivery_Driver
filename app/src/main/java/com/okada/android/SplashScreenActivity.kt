@@ -1,7 +1,10 @@
 package com.okada.android
 
+import android.Manifest.permission.POST_NOTIFICATIONS
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Patterns
@@ -12,6 +15,8 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.firebase.ui.auth.AuthMethodPickerLayout
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
@@ -22,7 +27,10 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.FirebaseMessagingService
 import com.okada.android.Model.DriverInfoModel
+import com.okada.android.Utils.UserUtils
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Completable
 import java.util.concurrent.TimeUnit
@@ -82,10 +90,25 @@ class SplashScreenActivity : AppCompatActivity() {
                 /*Toast.makeText(this@SplashScreenActivity,
                     "Welcome: New User, id: $userId", Toast.LENGTH_SHORT)
                     .show();*/
+                FirebaseMessaging.getInstance().token
+                    .addOnFailureListener { e ->
+                        Toast.makeText(
+                            this@SplashScreenActivity,
+                            "SplashScreen: ${e.message}", Toast.LENGTH_SHORT
+                        ).show();
+                    }.addOnSuccessListener {token->
+                        UserUtils.updateToken(this@SplashScreenActivity, token)
+                    }
                 checkUserFromFirebase();
             } else {
                 showLoginLayout()
             }
+        }
+        // Check permissions needed in new Android version for Push notifications
+        if (ContextCompat.checkSelfPermission(this, POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ActivityCompat.requestPermissions(this, arrayOf(POST_NOTIFICATIONS), 1)
+            };
         }
 
     }
