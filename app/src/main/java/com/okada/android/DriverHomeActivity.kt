@@ -2,6 +2,7 @@ package com.okada.android
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -23,6 +24,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.bumptech.glide.Glide
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
@@ -88,10 +90,12 @@ class DriverHomeActivity : AppCompatActivity() {
 
                 val dialog = builder.create()
                 dialog.setOnShowListener {
+                    val priColor = MaterialColors.getColor(this, android.R.attr.colorPrimary, Color.WHITE);
+                    val accColor = MaterialColors.getColor(this, android.R.attr.colorAccent, Color.WHITE);
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                        .setTextColor(resources.getColor(R.color.app_yellow, null))
+                        .setTextColor(priColor)
                     dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-                        .setTextColor(resources.getColor(R.color.app_Light_grey, null))
+                        .setTextColor(accColor)
                 }
 
                 dialog.show()
@@ -175,10 +179,12 @@ class DriverHomeActivity : AppCompatActivity() {
 
         val dialog = builder.create()
         dialog.setOnShowListener {
+            val priColor = MaterialColors.getColor(this, android.R.attr.colorPrimary, Color.WHITE);
+            val accColor = MaterialColors.getColor(this, android.R.attr.colorAccent, Color.WHITE);
             dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                .setTextColor(resources.getColor(R.color.app_yellow, null))
+                .setTextColor(priColor)
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-                .setTextColor(resources.getColor(R.color.app_Light_grey, null))
+                .setTextColor(accColor)
         }
 
         dialog.show()

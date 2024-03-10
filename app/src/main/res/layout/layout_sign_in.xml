@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/splash_screen_okada"
-    android:theme="@style/LoginTheme"
+    android:theme="@style/Theme.Okada"
     android:padding="16dp">
     
     <LinearLayout
