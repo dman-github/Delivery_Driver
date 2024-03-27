@@ -81,10 +81,10 @@ class DriverHomeActivity : AppCompatActivity() {
                     .setPositiveButton(R.string.menu_logout) { dialogInterface, _ ->
 
                         FirebaseAuth.getInstance().signOut()
-                        val intent =
+                        /*val intent =
                             Intent(this@DriverHomeActivity, SplashScreenActivity::class.java)
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        startActivity(intent)
+                        startActivity(intent)*/
                         finish()
                     }.setCancelable(false)
 

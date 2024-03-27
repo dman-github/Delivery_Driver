@@ -26,8 +26,7 @@
             app:popExitAnim="@anim/nav_app_pop_exit_anim" />
         <action
             android:id="@+id/action_splashFragment_to_driverHomeActivity"
-            app:destination="@id/driverHomeActivity"
-            app:popUpTo="@id/splashFragment" />
+            app:destination="@id/driverHomeActivity" />
     </fragment>
     <fragment
         android:id="@+id/loginFragment"
@@ -44,8 +43,7 @@
             app:popUpTo="@id/splashFragment" />
         <action
             android:id="@+id/action_loginFragment_to_driverHomeActivity"
-            app:destination="@id/driverHomeActivity"
-            app:popUpTo="@id/splashFragment" />
+            app:destination="@id/driverHomeActivity" />
     </fragment>
     <fragment
         android:id="@+id/registerFragment"
@@ -54,8 +52,7 @@
         tools:layout="@layout/fragment_register">
         <action
             android:id="@+id/action_registerFragment_to_driverHomeActivity"
-            app:destination="@id/driverHomeActivity"
-            app:popUpTo="@id/splashFragment" />
+            app:destination="@id/driverHomeActivity" />
     </fragment>
     <activity
         android:id="@+id/driverHomeActivity"
