@@ -1,5 +1,7 @@
 package com.okada.rider.android.ui.register
 
+import RegisterViewModel
+import RegisterViewModelFactory
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.annotation.StringRes
@@ -13,9 +15,8 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.navigation.fragment.findNavController
-import com.okada.rider.android.databinding.FragmentRegisterBinding
-
-import com.okada.rider.android.R
+import com.okada.android.R
+import com.okada.android.databinding.FragmentRegisterBinding
 
 class RegisterFragment : Fragment() {
 
@@ -114,7 +115,7 @@ class RegisterFragment : Fragment() {
     }
 
     private fun navigateToHomeScreen () {
-        findNavController().navigate(R.id.action_registerFragment_to_homeFragment)
+        findNavController().navigate(R.id.action_registerFragment_to_driverHomeActivity)
     }
 
     private fun updateUiWithUser(model: RegisteredUserView) {

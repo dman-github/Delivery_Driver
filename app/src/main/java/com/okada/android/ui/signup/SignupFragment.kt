@@ -12,11 +12,9 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
-import com.okada.rider.android.R
-import com.okada.rider.android.databinding.FragmentSignupBinding
+import com.okada.android.R
+import com.okada.android.databinding.FragmentSignupBinding
 import com.okada.rider.android.ui.login.LoggedInUserView
-import com.okada.rider.android.ui.login.LoginViewModel
-import com.okada.rider.android.ui.login.LoginViewModelFactory
 
 class SignupFragment : Fragment() {
     private lateinit var signupViewModel: SignupViewModel
@@ -77,11 +75,6 @@ class SignupFragment : Fragment() {
                 signupResult.success?.let {
                     updateUiWithUser(it)
                 }
-                signupResult.navigateToRegister?.let {
-                    if (it) {
-                        navigateToRegisterScreen()
-                    }
-                }
             })
 
         val afterTextChangedListener = object : TextWatcher {
@@ -125,9 +118,6 @@ class SignupFragment : Fragment() {
         }
     }
 
-    private fun navigateToRegisterScreen() {
-        findNavController().navigate(R.id.action_signupFragment_to_registerFragment)
-    }
 
 
     private fun updateUiWithUser(model: LoggedInUserView) {

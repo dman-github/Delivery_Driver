@@ -1,15 +1,16 @@
-package com.okada.rider.android.ui.register
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.okada.rider.android.data.ProfileUsecase
-
-import com.okada.rider.android.R
+import com.okada.android.R
 import com.okada.rider.android.data.AccountUsecase
+import com.okada.rider.android.data.ProfileUsecase
+import com.okada.rider.android.ui.register.RegisterFormState
+import com.okada.rider.android.ui.register.RegisterResult
 
 class RegisterViewModel(private val accountUsecase: AccountUsecase,
-                        private val profileUsecase: ProfileUsecase) : ViewModel() {
+                        private val profileUsecase: ProfileUsecase
+) : ViewModel() {
 
     private val _registerForm = MutableLiveData<RegisterFormState>()
     val registerFormState: LiveData<RegisterFormState> = _registerForm

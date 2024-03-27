@@ -3,12 +3,11 @@
     <string name="sign_in_email_message">Sign in with Email</string>
     <string name="sign_in_phone_message">Sign in with Phone</string>
     <string name="continue_message">Continue</string>
-    <string name="register_message">Let\'s start with creating your account</string>
     <string name="firstname_message">Firstname</string>
     <string name="lastname_message">Lastname</string>
     <string name="phone_num_message">Phone number</string>
     <string name="email_address_message">Email Address</string>
-    <string name="id_num_message">ID number</string>
+    <string name="id_num_message">Biometric ID</string>
     <string name="error_name">Error: </string>
     <string name="error_firstname_message">Please enter firstname</string>
     <string name="error_lastname_message">Please enter lastname</string>
@@ -36,4 +35,34 @@
     <string name="change_str">Change</string>
     <string name="waiting_msg">Waiting…</string>
     <string name="uploading_msg">Uploading…</string>
+
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Enter your E-mail</string>
+    <string name="prompt_password">Type your password</string>
+    <string name="prompt_re_enter_password">Re-type your password</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_sign_up">Sign up</string>
+    <string name="action_have_sign_up">Or click here to signup…</string>
+    <string name="action_already_signed_up">Or click here to login…</string>
+    <string name="welcome">"Welcome!"</string>
+    <!-- Strings related to register -->
+    <string name="create_profile">"Create Profile"</string>
+    <string name="login_message">Let\'s start by logging into your account</string>
+    <string name="register_message">Let\'s start with creating your account</string>
+    <string name="signup_message">Let\'s start with a new account signup</string>
+    <string name="invalid_string">Must not contain numeric characters</string>
+
+    <!-- Display messages to users -->
+    <string name="login_failed">"Login failed"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="invalid_matching_password">Passwords must match</string>
+    <string name="user_profile_exists">"A user profile already exists for this user"</string>
+    <string name="profile_created">"Profile has been created"</string>
+    <string name="onboarding_pg1_title">"Trustworthy and reliable"</string>
+    <string name="onboarding_pg1_desc">"All our drivers have been thoroughly vetted to ensure their reliability"</string>
+    <string name="onboarding_pg2_title">"Your pickup"</string>
+    <string name="onboarding_pg2_desc">"Drivers can pick up anything from documents, medicine and even groceries"</string>
+
 </resources>

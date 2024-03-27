@@ -1,5 +1,5 @@
-package com.okada.rider.android.ui.register
 
+import RegisterViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.okada.rider.android.data.AccountUsecase

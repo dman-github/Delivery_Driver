@@ -10,8 +10,9 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
-import com.okada.rider.android.R
-import com.okada.rider.android.databinding.FragmentSplashBinding
+import com.okada.android.R
+import com.okada.android.databinding.FragmentSplashBinding
+
 
 class SplashFragment : Fragment() {
     private lateinit var splashViewModel: SplashViewModel
@@ -66,11 +67,7 @@ class SplashFragment : Fragment() {
                     }
                 }
             })
-        if (onBoardingFinishedCheck()) {
             splashViewModel.startSplashTimer()
-        } else {
-            navigateToOnboarding()
-        }
     }
 
     private fun navigateToRegisterScreen() {
@@ -82,17 +79,13 @@ class SplashFragment : Fragment() {
     }
 
     private fun navigateToHomeScreen() {
-        findNavController().navigate(R.id.action_splashFragment_to_homeFragment)
+        findNavController().navigate(R.id.action_splashFragment_to_driverHomeActivity)
     }
 
     private fun navigateToOnboarding() {
-        findNavController().navigate(R.id.action_splashFragment_to_viewPagerFragment)
+       // findNavController().navigate(R.id.action_splashFragment_to_viewPagerFragment)
     }
 
-    private fun onBoardingFinishedCheck(): Boolean {
-        val sharedPref = requireActivity().getSharedPreferences("onBoarding", Context.MODE_PRIVATE)
-        return sharedPref.getBoolean("finished", false)
-    }
     private fun showLoginFailed(errorString: String) {
         val appContext = context?.applicationContext ?: return
         Toast.makeText(appContext, errorString, Toast.LENGTH_LONG).show()

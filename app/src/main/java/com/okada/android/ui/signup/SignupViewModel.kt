@@ -4,7 +4,7 @@ import android.util.Patterns
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.okada.rider.android.R
+import com.okada.android.R
 import com.okada.rider.android.data.SignupUsecase
 
 class SignupViewModel(private val signupRepository: SignupUsecase) : ViewModel() {
