@@ -66,7 +66,7 @@ class HomeViewModel : ViewModel() {
                     if (error != null) {
                         showSnackbarMessage.postValue(error.message)
                     } else {
-                        showSnackbarMessage.postValue("Location updated  testing")
+                        showSnackbarMessage.postValue("Location updated\nLat: ${location.latitude}, Lon: ${location.longitude}}")
                     }
                 }
             }
