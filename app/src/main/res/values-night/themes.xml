@@ -30,9 +30,5 @@
         <item name="colorPrimaryInverse">@color/md_theme_dark_inversePrimary</item>
     </style>
 
-    <style name="Theme.Okada.Fullscreen" parent="Theme.Okada">
-        <item name="android:windowFullscreen">true</item>
-    </style>
-
 
 </resources>
