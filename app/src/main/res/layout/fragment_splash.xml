@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".SplashFragment"
-    android:background="@drawable/splash_screen_okada">
+    android:background="@drawable/splash_bnw">
 
     <ProgressBar
         android:id="@+id/loading"

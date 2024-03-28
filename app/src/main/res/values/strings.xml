@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Okada</string>
+    <string name="app_name">Okada Driver</string>
     <string name="sign_in_email_message">Sign in with Email</string>
     <string name="sign_in_phone_message">Sign in with Phone</string>
     <string name="continue_message">Continue</string>

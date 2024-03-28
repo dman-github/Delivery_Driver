@@ -23,7 +23,7 @@
 
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:windowBackground">@drawable/splash_screen_okada</item>
+        <item name="android:windowBackground">@drawable/splash_bnw</item>
         <item name="android:windowFullscreen">true</item>
 
     </style>
