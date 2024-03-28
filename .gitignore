@@ -35,3 +35,5 @@ replay_pid*
 .gradle/buildOutputCleanup/outputFiles.bin
 assetWizardSettings.xml
 apiKeys.properties
+app/okadaDriver
+app/release/app-release.aab

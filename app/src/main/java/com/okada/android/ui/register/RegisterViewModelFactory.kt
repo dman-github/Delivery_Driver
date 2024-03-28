@@ -18,8 +18,7 @@ class RegisterViewModelFactory : ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(RegisterViewModel::class.java)) {
             return RegisterViewModel(
                 accountUsecase = AccountUsecase(
-                    accountService = AccountServiceImpl(),
-                    dataService = DataServiceImpl()
+                    accountService = AccountServiceImpl()
                 ),
                 profileUsecase = ProfileUsecase(
                     dataService = DataServiceImpl()

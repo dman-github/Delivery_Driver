@@ -5,8 +5,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
 import com.okada.rider.android.data.model.LoggedInUser
-import com.okada.rider.android.data.model.UserInfo
-import com.okada.rider.android.services.AccountService
+import com.okada.rider.android.data.model.DriverInfo
 import com.okada.rider.android.services.DataService
 import kotlin.Result
 
@@ -23,14 +22,14 @@ class ProfileUsecase(val dataService: DataService) {
     val isProfileExists: Boolean
         get() = profileExists
 
-    fun checkProfileExists(user: LoggedInUser, completion: (Result<Boolean>) -> Unit) {
+    fun checkProfileExists(user: LoggedInUser, completion: (Result<DriverInfo?>) -> Unit) {
 
         dataService.checkIfUserInfoExists(user.userId, object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 // Get Post object and use the values to update the UI
-                val userInfo = dataSnapshot.getValue<UserInfo>()
-                profileExists = userInfo != null
-                completion(Result.success(profileExists))
+                val driverInfo = dataSnapshot.getValue<DriverInfo>()
+                profileExists = driverInfo != null
+                completion(Result.success(driverInfo))
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
@@ -47,12 +46,12 @@ class ProfileUsecase(val dataService: DataService) {
         user: LoggedInUser,
         completion: (Result<Unit>) -> Unit
     ) {
-        var userInfo = UserInfo()
-        userInfo.firstname = firstname
-        userInfo.lastname = lastname
-        userInfo.email = user.email
-        userInfo.biometricId = biometricId
-        dataService.createUserInfo(user.userId, userInfo,
+        var driverInfo = DriverInfo()
+        driverInfo.firstname = firstname
+        driverInfo.lastname = lastname
+        driverInfo.email = user.email
+        driverInfo.biometricId = biometricId
+        dataService.createUserInfo(user.userId, driverInfo,
             failureListener = { exception ->
                 completion(Result.failure(exception))
             }, {

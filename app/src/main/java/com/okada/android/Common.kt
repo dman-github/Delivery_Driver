@@ -10,15 +10,14 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.okada.android.Model.DriverInfoModel
-import com.okada.android.Services.FirebaseMessagingIdService
+import com.okada.rider.android.data.model.DriverInfo
 
 object Common {
     fun buildWelcomeMessage(): String {
         return StringBuilder("Welcome, ")
-            .append(currentUser!!.firstName)
+            .append(currentUser!!.firstname)
             .append(" ")
-            .append(currentUser!!.lastName)
+            .append(currentUser!!.lastname)
             .toString()
     }
 
@@ -74,7 +73,7 @@ object Common {
     val NOTI_BODY: String = "body"
     val NOTI_TITLE: String = "title"
     val TOKEN_REFERENCE = "Token"
-    var currentUser: DriverInfoModel? = null
+    var currentUser: DriverInfo? = null
     val DRIVER_INFO_REFERENCE = "DriverInfo"
     var DRIVER_LOCATION_REFERENCE = "DriverLocation"
 }

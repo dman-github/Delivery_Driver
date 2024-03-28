@@ -7,9 +7,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.okada.android.Common
 import com.okada.rider.android.data.AccountUsecase
 import com.okada.rider.android.data.ProfileUsecase
-import com.okada.rider.android.data.SignupUsecase
 
 class SplashViewModel(
     private val accUsecase: AccountUsecase,
@@ -69,13 +69,14 @@ class SplashViewModel(
             result.fold(onSuccess = { user ->
                 //check if the logged in user has a profile
                 profileUsecase.checkProfileExists(user) {result ->
-                    result.fold(onSuccess = { exists ->
+                    result.fold(onSuccess = { profile ->
                         //check if the logged in user has a profile
-                        if (exists) {
+                        profile.also {user->
                             //-> Goto home screen
                             Log.i("okada Log","Goto home screen!")
+                            Common.currentUser = user
                             _splashResult.value = SplashResult(navigateToHome = true)
-                        } else {
+                        } ?: run {
                             // No-> goto register screen
                             Log.i("okada Log","Goto register screen!")
                             _splashResult.value = SplashResult(navigateToRegister = true)

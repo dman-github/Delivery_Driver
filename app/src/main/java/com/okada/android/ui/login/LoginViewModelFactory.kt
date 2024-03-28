@@ -3,6 +3,7 @@ package com.okada.rider.android.ui.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.okada.rider.android.data.AccountUsecase
+import com.okada.rider.android.data.ProfileUsecase
 import com.okada.rider.android.services.AccountServiceImpl
 import com.okada.rider.android.services.DataServiceImpl
 
@@ -17,7 +18,9 @@ class LoginViewModelFactory : ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
             return LoginViewModel(
                 loginRepository = AccountUsecase(
-                    accountService = AccountServiceImpl(),
+                    accountService = AccountServiceImpl()
+                ),
+                profileUsecase = ProfileUsecase(
                     dataService = DataServiceImpl()
                 )
             ) as T

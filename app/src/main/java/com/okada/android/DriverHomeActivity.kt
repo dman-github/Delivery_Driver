@@ -113,7 +113,7 @@ class DriverHomeActivity : AppCompatActivity() {
             text_name.text = Common.buildWelcomeMessage()
             text_email.text = user.email
             text_star.text = StringBuilder().append(user.rating)
-            if (user.avatar.isNotEmpty()) {
+            user.avatar?.isNotEmpty().let {
                 Glide.with(this)
                     .load(user.avatar)
                     .into(img_avatar)
