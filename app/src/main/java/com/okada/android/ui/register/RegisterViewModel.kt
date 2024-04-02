@@ -2,9 +2,11 @@
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.okada.android.Common
 import com.okada.android.R
 import com.okada.rider.android.data.AccountUsecase
 import com.okada.rider.android.data.ProfileUsecase
+import com.okada.rider.android.data.model.DriverInfo
 import com.okada.rider.android.ui.register.RegisterFormState
 import com.okada.rider.android.ui.register.RegisterResult
 
@@ -36,9 +38,15 @@ class RegisterViewModel(private val accountUsecase: AccountUsecase,
         lastname: String,
         biometricId: String
     ) {
-        accountUsecase.loggedInUser?.let {
-            profileUsecase.createUserInfo(firstname, lastname, biometricId, it) { result ->
+        accountUsecase.loggedInUser?.let {user->
+            profileUsecase.createUserInfo(firstname, lastname, biometricId, user) { result ->
                 result.fold(onSuccess = {
+                    var model = DriverInfo()
+                    model.firstname = firstname
+                    model.lastname = lastname
+                    model.biometricId
+                    model.email = user.email
+                    Common.currentUser = model
                     _registerResult.value =
                         RegisterResult(navigateToHome = true)
 

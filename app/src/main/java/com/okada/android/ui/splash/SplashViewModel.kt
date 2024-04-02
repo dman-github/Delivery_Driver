@@ -71,7 +71,7 @@ class SplashViewModel(
                 profileUsecase.checkProfileExists(user) {result ->
                     result.fold(onSuccess = { profile ->
                         //check if the logged in user has a profile
-                        profile.also {user->
+                        profile?.also {user->
                             //-> Goto home screen
                             Log.i("okada Log","Goto home screen!")
                             Common.currentUser = user

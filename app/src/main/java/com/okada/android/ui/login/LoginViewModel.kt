@@ -31,15 +31,16 @@ class LoginViewModel(private val loginRepository: AccountUsecase, private val pr
                 profileUsecase.checkProfileExists(user) {result ->
                     result.fold(onSuccess = { profile ->
                         //check if the logged in user has a profile
-                        profile.also {user->
+                        Log.i("okada Log","LoginViewModel profile rxed ! ${profile!=null}")
+                        profile?.also {user->
                             //-> Goto home screen
-                            Log.i("okada Log","Goto home screen!")
+                            Log.i("okada Log","LoginViewModel Goto home screen!")
                             Common.currentUser = user
                             _loginResult.value =
                                 LoginResult(navigateToHome = true)
                         } ?: run {
                             // No-> goto register screen
-                            Log.i("okada Log","Goto register screen!")
+                            Log.i("okada Log","LoginViewModel Goto register screen!")
                             _loginResult.value =
                                 LoginResult(navigateToRegister = true)
                         }

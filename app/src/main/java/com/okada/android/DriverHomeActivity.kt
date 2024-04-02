@@ -113,11 +113,16 @@ class DriverHomeActivity : AppCompatActivity() {
             text_name.text = Common.buildWelcomeMessage()
             text_email.text = user.email
             text_star.text = StringBuilder().append(user.rating)
-            user.avatar?.isNotEmpty().let {
+            if (!user.avatar.isNullOrEmpty()) {
                 Glide.with(this)
                     .load(user.avatar)
                     .into(img_avatar)
+            } else {
+                Glide.with(this)
+                    .load(R.drawable.okada_logo)
+                    .into(img_avatar)
             }
+
         }
         img_avatar.setOnClickListener {
             val intent = Intent()
