@@ -1,6 +1,6 @@
-package com.okada.rider.android.services
+package com.okada.android.services
 
-import com.okada.rider.android.data.model.LoggedInUser
+import com.okada.android.data.model.LoggedInUser
 
 interface AccountService {
     fun authenticate(email: String, password: String, completion: (Result<LoggedInUser>) -> Unit)
@@ -8,6 +8,8 @@ interface AccountService {
     fun isUserLoggedIn(completion: (Result<Boolean>) -> Unit)
     fun getLoggedInUser(completion: (Result<LoggedInUser>) -> Unit)
     fun logout(completion: (Result<Unit>) -> Unit )
+
+    fun getPushNotificationToken(completion: (Result<String>) -> Unit)
 
 
 }

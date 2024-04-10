@@ -1,4 +1,4 @@
-package com.okada.rider.android.ui.login
+package com.okada.android.ui.login
 
 /**
  * Authentication result : success (user details) or error message.

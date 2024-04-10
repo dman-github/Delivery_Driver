@@ -1,11 +1,11 @@
-package com.okada.rider.android.ui.login
+package com.okada.android.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.okada.rider.android.data.AccountUsecase
-import com.okada.rider.android.data.ProfileUsecase
-import com.okada.rider.android.services.AccountServiceImpl
-import com.okada.rider.android.services.DataServiceImpl
+import com.okada.android.data.AccountUsecase
+import com.okada.android.data.ProfileUsecase
+import com.okada.android.services.AccountServiceImpl
+import com.okada.android.services.DataServiceImpl
 
 /**
  * ViewModel provider factory to instantiate LoginViewModel.

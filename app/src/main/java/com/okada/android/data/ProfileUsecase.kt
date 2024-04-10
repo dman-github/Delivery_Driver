@@ -1,12 +1,13 @@
-package com.okada.rider.android.data
+package com.okada.android.data
 
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
-import com.okada.rider.android.data.model.LoggedInUser
-import com.okada.rider.android.data.model.DriverInfo
-import com.okada.rider.android.services.DataService
+import com.okada.android.data.model.LoggedInUser
+import com.okada.android.data.model.DriverInfo
+import com.okada.android.data.model.TokenModel
+import com.okada.android.services.DataService
 import kotlin.Result
 
 /**
@@ -58,6 +59,10 @@ class ProfileUsecase(val dataService: DataService) {
                 completion(Result.success(Unit))
             })
 
+    }
+
+    fun sendPushNotificationToken(uid: String, tokenM: TokenModel, completion: (Result<Unit>) -> Unit) {
+        dataService.updatePushMessagingToken(uid, tokenM, completion)
     }
 
 }

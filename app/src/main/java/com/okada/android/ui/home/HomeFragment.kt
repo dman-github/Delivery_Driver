@@ -1,25 +1,21 @@
 package com.okada.android.ui.home
 
+import HomeViewModelFactory
 import android.Manifest
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.pm.PackageManager
 import android.content.res.Resources
-import android.location.Location
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.firebase.geofire.GeoFire
-import com.firebase.geofire.GeoLocation
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -33,13 +29,6 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.okada.android.Common
 import com.okada.android.R
 import com.okada.android.databinding.FragmentHomeBinding
 import com.vmadalin.easypermissions.EasyPermissions
@@ -48,7 +37,7 @@ import com.vmadalin.easypermissions.dialogs.SettingsDialog
 
 class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionCallbacks {
 
-    private val viewModel: HomeViewModel by viewModels()
+    private lateinit var homeViewModel: HomeViewModel
     private lateinit var mMap: GoogleMap
     private var _binding: FragmentHomeBinding? = null
     private lateinit var mapFragment: SupportMapFragment
@@ -68,6 +57,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        homeViewModel =
+            ViewModelProvider(this, HomeViewModelFactory()).get(HomeViewModel::class.java)
+
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
         init()
@@ -83,18 +75,19 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private fun init() {
 
         // Create the observer which updates the UI.
-        val messageObserver = Observer<String?> { newMessage ->
-            newMessage?.let {message ->
-                mapFragment.view?.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
-            }
-        }
-        val locationObs = Observer<LatLng> { newPos ->
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos,18f))
-        }
-        // Observe the LiveData, passing in this activity as the LifecycleOwner and the observer.
-        viewModel.showSnackbarMessage.observe(viewLifecycleOwner, messageObserver)
-        viewModel.updateMap.observe(viewLifecycleOwner, locationObs)
+        homeViewModel.showSnackbarMessage.observe(viewLifecycleOwner,
+            Observer { newMessage ->
+                newMessage?.let { message ->
+                    mapFragment.view?.let {
+                        Snackbar.make(it, message, Snackbar.LENGTH_LONG).show()
+                    }
+                }
+            })
 
+        homeViewModel.updateMap.observe(viewLifecycleOwner,
+            Observer { newPos ->
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos, 18f));
+            })
         // The google map builder
         locationRequest = LocationRequest.Builder(5000)
             .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
@@ -105,7 +98,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         locationCallback = object: LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
-                viewModel.updateLocation(locationResult.lastLocation)
+                homeViewModel.updateLocation(locationResult.lastLocation)
             }
         }
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
@@ -118,6 +111,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         ) {
 
             fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+            fetchLastLocation()
         } else {
             Log.i("App_Info", "onResume  NO permissions")
         }
@@ -133,14 +127,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        viewModel.clearMessage()
+        homeViewModel.clearMessage()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        viewModel.removeUserLocation()
-        //onlineRef.removeEventListener(onlineValueEventListener)
-
+        homeViewModel.removeUserLocation()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -191,7 +183,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                         "Error: $e", Toast.LENGTH_SHORT
                     ).show();
                 }.addOnSuccessListener { lastLocation ->
-                    viewModel.updateLocation(lastLocation)
+                    homeViewModel.updateLocation(lastLocation)
                 }
         }
     }

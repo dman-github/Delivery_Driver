@@ -8,7 +8,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.okada.android.Common
-import com.okada.android.Model.TokenModel
+import com.okada.android.data.model.TokenModel
 
 object UserUtils {
     fun UpdateUser(view: View, updateData:Map<String,Any>) {
@@ -21,24 +21,6 @@ object UserUtils {
             }.addOnSuccessListener {
                 Snackbar.make(view, "Update image worked", Snackbar.LENGTH_LONG).show()
             }
-    }
-
-    fun updateToken(context: Context, token: String) {
-        val tokenModel = TokenModel()
-        tokenModel.token = token
-        Log.i("App_Info", "updateToken: $token")
-        FirebaseAuth.getInstance().currentUser?.uid?.let {uid->
-            FirebaseDatabase.getInstance()
-                .getReference(Common.TOKEN_REFERENCE)
-                .child(uid)
-                .setValue(token)
-                .addOnFailureListener {e->
-                    Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
-                }
-                .addOnSuccessListener {
-
-                }
-        }
     }
 
 }

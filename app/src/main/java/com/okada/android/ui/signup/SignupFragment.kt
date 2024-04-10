@@ -1,4 +1,4 @@
-package com.okada.rider.android.ui.signup
+package com.okada.android.ui.signup
 
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
@@ -14,7 +14,7 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.okada.android.R
 import com.okada.android.databinding.FragmentSignupBinding
-import com.okada.rider.android.ui.login.LoggedInUserView
+import com.okada.android.ui.login.LoggedInUserView
 
 class SignupFragment : Fragment() {
     private lateinit var signupViewModel: SignupViewModel

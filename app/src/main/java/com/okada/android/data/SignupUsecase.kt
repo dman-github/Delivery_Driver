@@ -1,7 +1,7 @@
-package com.okada.rider.android.data
+package com.okada.android.data
 
-import com.okada.rider.android.data.model.LoggedInUser
-import com.okada.rider.android.services.AccountService
+import com.okada.android.services.AccountService
+import com.okada.android.data.model.LoggedInUser
 import kotlin.Result
 
 class SignupUsecase(val accountService: AccountService) {

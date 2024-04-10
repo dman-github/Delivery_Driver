@@ -1,13 +1,7 @@
-package com.okada.rider.android.data
+package com.okada.android.data
+import com.okada.android.services.AccountService
+import com.okada.android.data.model.LoggedInUser
 
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.getValue
-import com.okada.rider.android.data.model.LoggedInUser
-import com.okada.rider.android.data.model.DriverInfo
-import com.okada.rider.android.services.AccountService
-import com.okada.rider.android.services.DataService
 
 /**
  * Class that requests authentication and user information from the remote data source and
@@ -55,5 +49,9 @@ class AccountUsecase (val accountService: AccountService) {
                 completion(Result.failure(it))
             })
         }
+    }
+
+    fun fetchPushNotificationToken(completion: (Result<String>) -> Unit) {
+        accountService.getPushNotificationToken(completion)
     }
 }

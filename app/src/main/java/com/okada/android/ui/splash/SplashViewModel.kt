@@ -1,4 +1,4 @@
-package com.okada.rider.android.ui.splash
+package com.okada.android.ui.splash
 
 import android.os.Handler
 import android.os.Looper
@@ -8,8 +8,9 @@ import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.okada.android.Common
-import com.okada.rider.android.data.AccountUsecase
-import com.okada.rider.android.data.ProfileUsecase
+import com.okada.android.data.AccountUsecase
+import com.okada.android.data.ProfileUsecase
+import com.okada.android.data.model.TokenModel
 
 class SplashViewModel(
     private val accUsecase: AccountUsecase,
@@ -67,6 +68,8 @@ class SplashViewModel(
         //check if there is a logged in user
         accUsecase.getLoggedInUser { result ->
             result.fold(onSuccess = { user ->
+                //Get the firebase notification token
+                sendFirebaseToken(user.userId)
                 //check if the logged in user has a profile
                 profileUsecase.checkProfileExists(user) {result ->
                     result.fold(onSuccess = { profile ->
@@ -94,5 +97,22 @@ class SplashViewModel(
         }
     }
 
-
+    private fun sendFirebaseToken(uid: String) {
+        accUsecase.fetchPushNotificationToken {result->
+            result.fold(onSuccess = { token ->
+                val model = TokenModel()
+                model.token = token
+                profileUsecase.sendPushNotificationToken(uid, model) {result->
+                    result.fold(onSuccess = {
+                        //check if the logged in user has a profile
+                        Log.i("App_info","sendFirebaseToken, Token sent: $token")
+                    }, onFailure = {
+                        Log.i("App_info","sendFirebaseToken, Error: ${it.message}")
+                    })
+                }
+            }, onFailure = {
+                Log.i("App_info","sendFirebaseToken, Error: ${it.message}")
+            })
+        }
+    }
 }

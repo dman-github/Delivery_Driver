@@ -1,4 +1,4 @@
-package com.okada.rider.android.ui.register
+package com.okada.android.ui.register
 
 /**
  * User details post authentication that is exposed to the UI

@@ -1,24 +1,18 @@
 package com.okada.android.ui.home
 
 import android.location.Location
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.firebase.geofire.GeoFire
-import com.firebase.geofire.GeoLocation
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.okada.android.Common
+import com.okada.android.data.LocationUsecase
+import com.okada.android.data.AccountUsecase
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(private val accountUsecase: AccountUsecase,
+                    private val locationUsecase: LocationUsecase
+) : ViewModel() {
     private val _model = HomeModel()
 
     // Online database
@@ -32,79 +26,52 @@ class HomeViewModel : ViewModel() {
     }
     val text: LiveData<String> = _text
 
-    val showSnackbarMessage: MutableLiveData<String?> by lazy {
-        MutableLiveData<String?>()
-    }
-    val updateMap: MutableLiveData<LatLng> by lazy {
-        MutableLiveData<LatLng>()
-    }
+    private val _showSnackbarMessage = MutableLiveData<String?>()
+    val showSnackbarMessage: LiveData<String?> = _showSnackbarMessage
+
+    private val _updateMap = MutableLiveData<LatLng>()
+    val updateMap: LiveData<LatLng> = _updateMap
 
 
     init {
-        _model.uid = FirebaseAuth.getInstance().currentUser?.uid
-        setupDataBase()
+        accountUsecase.getLoggedInUser { result ->
+            result.fold(onSuccess = { user ->
+                _model.uid = user.userId
+                locationUsecase.setupDatabase(user.userId)
+            }, onFailure = {
+                _showSnackbarMessage.value = it.message
+            })
+        }
     }
 
     fun clearMessage() {
-        showSnackbarMessage.postValue(null)
+        _showSnackbarMessage.value = null
     }
     fun updateLocation(location: Location?) {
-        location?.let { location ->
+        location?.let {location ->
             val newPos = LatLng(location.latitude, location.longitude)
-            _model.lastLocation = newPos
-            Log.i(
-                "App_Info",
-                "on:locationCallback Lat: $location.latitude, Lon: $location.longitude"
-            )
-            updateMap.postValue(newPos)
-            //Update location in driver db
-            _model.uid?.let {
-                geoFire.setLocation(
-                    it,
-                    GeoLocation(location.latitude, location.longitude)
-                ) { _: String?, error: DatabaseError? ->
-                    if (error != null) {
-                        showSnackbarMessage.postValue(error.message)
-                    } else {
-                        showSnackbarMessage.postValue("Location updated\nLat: ${location.latitude}, Lon: ${location.longitude}}")
+            _model.uid?.also {uid->
+                locationUsecase.updateLocation(uid, location) {result->
+                    result.onSuccess {
+                        _model.lastLocation = newPos
+                        _updateMap.value = newPos
+                        _showSnackbarMessage.value = "Location updated\nLat: ${location.latitude}, Lon: ${location.longitude}}"
+                    }
+                    result.onFailure {
+                        _showSnackbarMessage.value = it.message
                     }
                 }
+            }?:run {
+                _showSnackbarMessage.value = "No logged in user"
             }
         }
     }
 
     fun removeUserLocation() {
-        _model.uid?.let {
-            geoFire.removeLocation(it)
-        }
-    }
-    private fun setupDataBase() {
-        // Setting up Driver location DB
-        onlineRef = FirebaseDatabase.getInstance().reference.child(".info/connected")
-        driverLocationRef =
-            FirebaseDatabase.getInstance().getReference(Common.DRIVER_LOCATION_REFERENCE)
-        _model.uid?.let {
-            currentUserRef =
-                FirebaseDatabase.getInstance().getReference(Common.DRIVER_LOCATION_REFERENCE)
-                    .child(it)
-        }
-        geoFire = GeoFire(driverLocationRef)
-    }
-
-
-    private fun registerOnlineSystem() {
-        onlineRef.addValueEventListener(onlineValueEventListener)
-    }
-
-    private val onlineValueEventListener = object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            if (snapshot.exists()) {
-                currentUserRef.onDisconnect().removeValue()
-            }
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            showSnackbarMessage.postValue(error.message)
+        _model.uid?.also {uid->
+            locationUsecase.removeLocationFor(uid)
+        }?:run {
+            _showSnackbarMessage.value = "No logged in user"
         }
     }
 

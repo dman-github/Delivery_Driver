@@ -1,4 +1,4 @@
-package com.okada.rider.android.ui.login
+package com.okada.android.ui.login
 
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider

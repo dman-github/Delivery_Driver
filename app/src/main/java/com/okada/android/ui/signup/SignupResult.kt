@@ -1,6 +1,6 @@
-package com.okada.rider.android.ui.signup
+package com.okada.android.ui.signup
 
-import com.okada.rider.android.ui.login.LoggedInUserView
+import com.okada.android.ui.login.LoggedInUserView
 
 
 data class SignupResult(

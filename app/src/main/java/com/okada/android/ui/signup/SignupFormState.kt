@@ -1,4 +1,4 @@
-package com.okada.rider.android.ui.signup
+package com.okada.android.ui.signup
 
 
 data class SignupFormState(

@@ -4,11 +4,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.okada.android.Common
 import com.okada.android.R
-import com.okada.rider.android.data.AccountUsecase
-import com.okada.rider.android.data.ProfileUsecase
-import com.okada.rider.android.data.model.DriverInfo
-import com.okada.rider.android.ui.register.RegisterFormState
-import com.okada.rider.android.ui.register.RegisterResult
+import com.okada.android.data.AccountUsecase
+import com.okada.android.data.ProfileUsecase
+import com.okada.android.data.model.DriverInfo
+import com.okada.android.ui.register.RegisterFormState
+import com.okada.android.ui.register.RegisterResult
 
 class RegisterViewModel(private val accountUsecase: AccountUsecase,
                         private val profileUsecase: ProfileUsecase

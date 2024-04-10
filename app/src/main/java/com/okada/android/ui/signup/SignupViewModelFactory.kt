@@ -1,9 +1,9 @@
-package com.okada.rider.android.ui.signup
+package com.okada.android.ui.signup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.okada.rider.android.data.SignupUsecase
-import com.okada.rider.android.services.AccountServiceImpl
+import com.okada.android.data.SignupUsecase
+import com.okada.android.services.AccountServiceImpl
 
 
 /**

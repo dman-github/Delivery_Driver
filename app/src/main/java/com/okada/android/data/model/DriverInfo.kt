@@ -1,4 +1,4 @@
-package com.okada.rider.android.data.model
+package com.okada.android.data.model
 
 data class DriverInfo (var firstname: String? = null,
                        var lastname: String? = null,

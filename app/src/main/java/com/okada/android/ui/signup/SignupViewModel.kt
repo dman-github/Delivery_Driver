@@ -1,11 +1,11 @@
-package com.okada.rider.android.ui.signup
+package com.okada.android.ui.signup
 
 import android.util.Patterns
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.okada.android.R
-import com.okada.rider.android.data.SignupUsecase
+import com.okada.android.data.SignupUsecase
 
 class SignupViewModel(private val signupRepository: SignupUsecase) : ViewModel() {
 

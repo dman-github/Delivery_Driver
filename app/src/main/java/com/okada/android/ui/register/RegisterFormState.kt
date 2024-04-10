@@ -1,4 +1,4 @@
-package com.okada.rider.android.ui.register
+package com.okada.android.ui.register
 
 /**
  * Data validation state of the login form.

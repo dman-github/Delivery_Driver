@@ -1,4 +1,4 @@
-package com.okada.rider.android.ui.login
+package com.okada.android.ui.login
 
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -11,10 +11,10 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
 import com.okada.android.Common
 import com.okada.android.R
-import com.okada.rider.android.data.AccountUsecase
-import com.okada.rider.android.data.ProfileUsecase
-import com.okada.rider.android.data.model.DriverInfo
-import com.okada.rider.android.ui.splash.SplashResult
+import com.okada.android.data.AccountUsecase
+import com.okada.android.data.ProfileUsecase
+import com.okada.android.data.model.DriverInfo
+import com.okada.android.ui.splash.SplashResult
 
 class LoginViewModel(private val loginRepository: AccountUsecase, private val profileUsecase: ProfileUsecase) : ViewModel() {
 

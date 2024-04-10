@@ -1,4 +1,4 @@
-package com.okada.rider.android.ui.splash
+package com.okada.android.ui.splash
 
 import android.content.Context
 import androidx.lifecycle.ViewModelProvider

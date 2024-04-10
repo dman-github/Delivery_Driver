@@ -1,29 +1,27 @@
-package com.okada.android.ui.splash
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.okada.android.data.LocationUsecase
+import com.okada.android.services.LocationServiceImpl
+import com.okada.android.ui.home.HomeViewModel
 import com.okada.android.data.AccountUsecase
-import com.okada.android.data.ProfileUsecase
-import com.okada.android.data.SignupUsecase
 import com.okada.android.services.AccountServiceImpl
-import com.okada.android.services.DataServiceImpl
-
 
 /**
  * ViewModel provider factory to instantiate LoginViewModel.
  * Required given LoginViewModel has a non-empty constructor
  */
-class SplashViewModelFactory : ViewModelProvider.Factory {
+class HomeViewModelFactory : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SplashViewModel::class.java)) {
-            return SplashViewModel(
-                accUsecase = AccountUsecase(
+        if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
+            return HomeViewModel(
+                accountUsecase = AccountUsecase(
                     accountService = AccountServiceImpl()
                 ),
-                profileUsecase = ProfileUsecase(
-                    dataService = DataServiceImpl()
+                locationUsecase = LocationUsecase(
+                    locationService = LocationServiceImpl()
                 )
             ) as T
         }

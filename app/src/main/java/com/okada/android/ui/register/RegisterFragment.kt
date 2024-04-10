@@ -1,4 +1,4 @@
-package com.okada.rider.android.ui.register
+package com.okada.android.ui.register
 
 import RegisterViewModel
 import RegisterViewModelFactory
