@@ -141,7 +141,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
     override fun onDestroy() {
         super.onDestroy()
-        homeViewModel.removeUserLocation()
+        removeLocation()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -239,6 +239,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         } else {
             appRequiresPermission()
         }
+    }
+
+    fun removeLocation() {
+        homeViewModel.removeUserLocation()
     }
 
 
