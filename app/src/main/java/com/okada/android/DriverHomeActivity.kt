@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -32,6 +33,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.okada.android.Utils.UserUtils
 import com.okada.android.databinding.ActivityDriverHomeBinding
+import com.okada.android.ui.home.HomeFragment
 import java.util.HashMap
 
 class DriverHomeActivity : AppCompatActivity() {
@@ -81,10 +83,13 @@ class DriverHomeActivity : AppCompatActivity() {
                     .setPositiveButton(R.string.menu_logout) { dialogInterface, _ ->
 
                         FirebaseAuth.getInstance().signOut()
-                        /*val intent =
-                            Intent(this@DriverHomeActivity, SplashScreenActivity::class.java)
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        startActivity(intent)*/
+                        val navHostFragment = supportFragmentManager.fragments.first() as? NavHostFragment
+                        if(navHostFragment != null) {
+                            // Home fragment on Destroy does not work on some devices so we need to also
+                            // remove the location when the user signs out
+                            val hmeFragment = navHostFragment.childFragmentManager.fragments.first() as? HomeFragment
+                            hmeFragment?.removeLocation()
+                        }
                         finish()
                     }.setCancelable(false)
 
