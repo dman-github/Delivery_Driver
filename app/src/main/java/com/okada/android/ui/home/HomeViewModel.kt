@@ -1,5 +1,6 @@
 package com.okada.android.ui.home
 
+import android.content.Context
 import android.location.Location
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -47,11 +48,11 @@ class HomeViewModel(private val accountUsecase: AccountUsecase,
     fun clearMessage() {
         _showSnackbarMessage.value = null
     }
-    fun updateLocation(location: Location?) {
+    fun updateLocation(location: Location?, context: Context) {
         location?.let {location ->
             val newPos = LatLng(location.latitude, location.longitude)
             _model.uid?.also {uid->
-                locationUsecase.updateLocation(uid, location) {result->
+                locationUsecase.updateLocation(uid, location, context) {result->
                     result.onSuccess {
                         _model.lastLocation = newPos
                         _updateMap.value = newPos

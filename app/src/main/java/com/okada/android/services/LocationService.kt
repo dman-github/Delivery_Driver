@@ -1,5 +1,6 @@
 package com.okada.android.services
 
+import android.content.Context
 import android.location.Location
 
 interface LocationService {
@@ -9,6 +10,7 @@ interface LocationService {
     fun updateLocation(
         uid:String,
         newLocation: Location,
+        context: Context,
         completion: (Result<Unit>) -> Unit)
 
     fun removeLocationfor(uid: String)

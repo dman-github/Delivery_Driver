@@ -5,6 +5,7 @@ import android.Manifest
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.location.Geocoder
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
@@ -34,6 +35,8 @@ import com.okada.android.databinding.FragmentHomeBinding
 import com.vmadalin.easypermissions.EasyPermissions
 import com.vmadalin.easypermissions.annotations.AfterPermissionGranted
 import com.vmadalin.easypermissions.dialogs.SettingsDialog
+import java.io.IOException
+import java.util.Locale
 
 class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionCallbacks {
 
@@ -98,7 +101,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         locationCallback = object: LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
-                homeViewModel.updateLocation(locationResult.lastLocation)
+                try {
+                    homeViewModel.updateLocation(locationResult.lastLocation, requireContext())
+                } catch(e:IOException) {
+                    e.message?.let {
+                        Snackbar.make(requireView(), "IOException: $it", Snackbar.LENGTH_LONG).show()
+                    }
+                }
             }
         }
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
@@ -183,7 +192,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                         "Error: $e", Toast.LENGTH_SHORT
                     ).show();
                 }.addOnSuccessListener { lastLocation ->
-                    homeViewModel.updateLocation(lastLocation)
+                    homeViewModel.updateLocation(lastLocation, requireContext())
                 }
         }
     }
