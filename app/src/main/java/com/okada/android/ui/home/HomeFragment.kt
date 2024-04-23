@@ -92,10 +92,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos, 18f));
             })
         // The google map builder
-        locationRequest = LocationRequest.Builder(5000)
+        locationRequest = LocationRequest.Builder(10000)
             .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
-            .setMinUpdateDistanceMeters(10f)
-            .setMinUpdateIntervalMillis(3000).build()
+            .setMinUpdateDistanceMeters(50f)
+            .setMinUpdateIntervalMillis(5000).build() //If a location is available sooner by another app then use it
 
         // Adding a location callback for the google map
         locationCallback = object: LocationCallback() {
