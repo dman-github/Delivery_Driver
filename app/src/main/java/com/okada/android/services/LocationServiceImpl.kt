@@ -89,7 +89,7 @@ class LocationServiceImpl : LocationService {
         //locality -> adminArea is going from narrow window to a larger address window
         // if the locality is null then select sublocality e.t.`false`
         // Normally locality is the city
-        return a.locality ?: a.subLocality ?: a.subAdminArea ?: a.adminArea
+        return a.subAdminArea ?: a.adminArea
     }
 
     private fun getCountryCodeComponent(a: Address): String {
