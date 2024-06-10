@@ -75,4 +75,7 @@ object Common {
     val TOKEN_REFERENCE = "PushTokens"
     var currentUser: DriverInfo? = null
     val DRIVER_INFO_REFERENCE = "DriverInfo"
+    val CLIENT_KEY: String = "clientKey"
+    val PICKUP_LOCATION: String = "pickupLoc"
+    val REQUEST_DRIVER_MSG_TITLE: String = "Driver requested!"
 }

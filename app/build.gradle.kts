@@ -117,4 +117,15 @@ dependencies {
     // Glide for loading images
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
+
+    //Retrofit
+    implementation("com.squareup.retrofit2:adapter-rxjava2:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-scalars:2.9.0")
+
+    //EventBus
+    implementation("org.greenrobot:eventbus:3.3.1")
+
+    //Circular progress bar
+    implementation("com.mikhaellopez:circularprogressbar:3.1.0")
 }

@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -29,6 +30,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
 import com.okada.android.R
 import com.okada.android.databinding.FragmentHomeBinding
@@ -42,6 +44,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
     private lateinit var homeViewModel: HomeViewModel
     private lateinit var mMap: GoogleMap
+    private lateinit var declineView: Chip
+    private lateinit var jobView: CardView
     private var _binding: FragmentHomeBinding? = null
     private lateinit var mapFragment: SupportMapFragment
     private lateinit var locationRequest: LocationRequest
@@ -71,7 +75,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         mapFragment = childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
-
+        declineView = binding.chipDecline
+        jobView = binding.layoutAccept
         return root
     }
 
