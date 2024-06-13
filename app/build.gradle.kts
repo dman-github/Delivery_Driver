@@ -128,4 +128,10 @@ dependencies {
 
     //Circular progress bar
     implementation("com.mikhaellopez:circularprogressbar:3.1.0")
+
+    // Google maps utils
+    implementation("com.google.maps.android:android-maps-utils:3.8.2")
+
+    //RxJava
+    implementation ("io.reactivex.rxjava2:rxandroid:2.1.1")
 }

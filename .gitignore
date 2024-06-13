@@ -39,3 +39,5 @@ app/okadaDriver
 app/release/app-release.aab
 app/release/app-release.apk
 app/release/output-metadata.json
+dependencies-accessors.lock
+kotlin-compiler-3351316775992255829.salive

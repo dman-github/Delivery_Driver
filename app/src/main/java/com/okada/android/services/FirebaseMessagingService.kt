@@ -19,9 +19,10 @@ class FirebaseMessagingIdService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
+        // Firebase message has a Notification object and a Data object. The Data object is a dictionary
         val data = message.data
-        data?.let { data ->
-            if (data[NOTI_TITLE].equals(REQUEST_DRIVER_MSG_TITLE)) {
+        message.notification?.let { noti ->
+            if (noti.title.equals(REQUEST_DRIVER_MSG_TITLE)) {
                 data[CLIENT_KEY]?.let { key ->
                     data[PICKUP_LOCATION]?.let { loc ->
                         EventBus.getDefault().postSticky(DriverRequestModel(key, loc))
@@ -31,11 +32,12 @@ class FirebaseMessagingIdService : FirebaseMessagingService() {
                 Common.showNotification(
                     this,
                     Random().nextInt(),
-                    data[Common.NOTI_TITLE],
-                    data[Common.NOTI_BODY],
+                    noti.title,
+                    noti.body,
                     null
                 )
             }
+
         }
     }
 

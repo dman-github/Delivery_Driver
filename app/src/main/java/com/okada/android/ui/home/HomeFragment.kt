@@ -3,8 +3,10 @@ package com.okada.android.ui.home
 import HomeViewModelFactory
 import android.Manifest
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.animation.ValueAnimator
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.graphics.Color
 import android.location.Geocoder
 import android.os.Bundle
 import android.os.Looper
@@ -12,6 +14,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.LinearInterpolator
+import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
@@ -28,17 +32,34 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.maps.model.SquareCap
 import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
+import com.mikhaellopez.circularprogressbar.CircularProgressBar
 import com.okada.android.R
+import com.okada.android.data.model.DriverRequestModel
+import com.okada.android.data.model.SelectedPlaceModel
 import com.okada.android.databinding.FragmentHomeBinding
 import com.vmadalin.easypermissions.EasyPermissions
 import com.vmadalin.easypermissions.annotations.AfterPermissionGranted
 import com.vmadalin.easypermissions.dialogs.SettingsDialog
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import java.io.IOException
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionCallbacks {
 
@@ -46,15 +67,21 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var mMap: GoogleMap
     private lateinit var declineView: Chip
     private lateinit var jobView: CardView
+    private lateinit var estimatedDistanceTxtView: TextView
+    private lateinit var estimatedTimeTextView: TextView
+    private lateinit var circularProgressBar: CircularProgressBar
     private var _binding: FragmentHomeBinding? = null
     private lateinit var mapFragment: SupportMapFragment
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private var driverRequestModel: DriverRequestModel? = null
+    private lateinit var valueAnimator: ValueAnimator
 
     companion object {
         private const val REQUEST_LOCATION_PERMISSION = 0x2233
     }
+
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
@@ -69,7 +96,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
-        init()
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = childFragmentManager
@@ -77,10 +103,18 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         mapFragment.getMapAsync(this)
         declineView = binding.chipDecline
         jobView = binding.layoutAccept
+        estimatedDistanceTxtView = binding.textEstimatedDistance
+        estimatedTimeTextView = binding.textEstimatedTime
+        circularProgressBar = binding.circularProgressbar
+        init()
+
+
         return root
     }
 
     private fun init() {
+        //set google map api key
+        homeViewModel.setGoogleApiKey(resources.getString(R.string.GOOGLE_MAPS_API_KEY))
 
         // Create the observer which updates the UI.
         homeViewModel.showSnackbarMessage.observe(viewLifecycleOwner,
@@ -96,48 +130,83 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             Observer { newPos ->
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos, 18f));
             })
+
+        homeViewModel.updateMapWithPlace.observe(viewLifecycleOwner,
+            Observer { model ->
+                drawPath(model)
+            })
+
         // The google map builder
         locationRequest = LocationRequest.Builder(10000)
             .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
             .setMinUpdateDistanceMeters(50f)
-            .setMinUpdateIntervalMillis(5000).build() //If a location is available sooner by another app then use it
+            .setMinUpdateIntervalMillis(5000)
+            .build() //If a location is available sooner by another app then use it
 
         // Adding a location callback for the google map
-        locationCallback = object: LocationCallback() {
+        locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
                 try {
                     homeViewModel.updateLocation(locationResult.lastLocation, requireContext())
-                } catch(e:IOException) {
+                } catch (e: IOException) {
                     e.message?.let {
-                        Snackbar.make(requireView(), "IOException: $it", Snackbar.LENGTH_LONG).show()
+                        Snackbar.make(requireView(), "IOException: $it", Snackbar.LENGTH_LONG)
+                            .show()
                     }
                 }
             }
         }
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
+        fusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(requireContext())
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
     }
 
     override fun onResume() {
         super.onResume()
-        if (ContextCompat.checkSelfPermission(requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
 
-            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+            fusedLocationProviderClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.myLooper()
+            )
             fetchLastLocation()
         } else {
             Log.i("App_Info", "onResume  NO permissions")
         }
         //registerOnlineSystem()
     }
+
     override fun onPause() {
         super.onPause()
-        if (ContextCompat.checkSelfPermission(requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback)
         }
     }
+
+    override fun onStop() {
+        super.onStop()
+        if (EventBus.getDefault().hasSubscriberForEvent(SelectedPlaceModel::class.java))
+            EventBus.getDefault().removeStickyEvent(SelectedPlaceModel::class.java)
+        EventBus.getDefault().unregister(this)
+        valueAnimator.end()
+        valueAnimator.cancel()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -147,6 +216,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     override fun onDestroy() {
         super.onDestroy()
         removeLocation()
+
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -156,7 +226,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         try {
             val success = googleMap.setMapStyle(context?.let {
                 MapStyleOptions.loadRawResourceStyle(
-                    it, R.raw.maps_style)
+                    it, R.raw.maps_style
+                )
             })
             //googleMap.setMapStyle(null)
             if (!success) {
@@ -167,15 +238,18 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 fetchLastLocation()
             }
 
-        } catch (e:Resources.NotFoundException) {
+        } catch (e: Resources.NotFoundException) {
             Log.e("App_Error", e.message.toString())
         }
     }
 
 
-
     private fun processMapAfterPermissions() {
-        if (ContextCompat.checkSelfPermission(requireContext(), ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             mMap.isMyLocationEnabled = true
             mMap.uiSettings.isMyLocationButtonEnabled = true
             mMap.setOnMyLocationButtonClickListener {
@@ -188,7 +262,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     }
 
     private fun fetchLastLocation() {
-        if (ContextCompat.checkSelfPermission(requireContext(), ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             fusedLocationProviderClient
                 .lastLocation
                 .addOnFailureListener { e ->
@@ -203,7 +281,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     }
 
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
 
         Log.i("App_Info", "onRequestPermissionsResult permissions count: ${permissions.size}")
         // EasyPermissions handles the request result.
@@ -219,10 +301,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             processMapAfterPermissions()
         } else {
             // Do not have permissions, request them now
-            EasyPermissions.requestPermissions(this,
+            EasyPermissions.requestPermissions(
+                this,
                 getString(R.string.rationale_message_for_location),
                 REQUEST_LOCATION_PERMISSION,
-                ACCESS_FINE_LOCATION)
+                ACCESS_FINE_LOCATION
+            )
 
         }
     }
@@ -246,8 +330,112 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         }
     }
 
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    fun onDriverRequest(event: DriverRequestModel) {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            fusedLocationProviderClient
+                .lastLocation
+                .addOnFailureListener { e ->
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: $e", Toast.LENGTH_SHORT
+                    ).show();
+                }.addOnSuccessListener { lastLocation ->
+                    homeViewModel.calculatePath(event.pickupLocation, lastLocation)
+                }
+        }
+    }
+
     fun removeLocation() {
         homeViewModel.removeUserLocation()
+    }
+
+    private fun drawPath(model: SelectedPlaceModel) {
+        var blackPolyLine: Polyline? = null
+        var greyPolyLine: Polyline? = null
+        var polylineList: List<LatLng>? = null
+        var polylineOptions: PolylineOptions? = null
+        var blackPolyLineOptions: PolylineOptions? = null
+
+        polylineList = model.polylineList
+        polylineOptions = PolylineOptions()
+        polylineOptions?.color(Color.GRAY)
+        polylineOptions?.width(12f)
+        polylineOptions?.startCap(SquareCap())
+        polylineOptions?.jointType(JointType.ROUND)
+        polylineList?.asIterable()?.let { iterable ->
+            polylineOptions?.addAll(iterable)
+        }
+        polylineOptions?.let { options ->
+            greyPolyLine = mMap.addPolyline(options)
+        }
+
+        blackPolyLineOptions = PolylineOptions()
+        blackPolyLineOptions?.color(Color.BLACK)
+        blackPolyLineOptions?.width(5f)
+        blackPolyLineOptions?.startCap(SquareCap())
+        blackPolyLineOptions?.jointType(JointType.ROUND)
+        polylineList?.asIterable()?.let { iterable ->
+            blackPolyLineOptions?.addAll(iterable)
+        }
+        blackPolyLineOptions?.let { options ->
+            blackPolyLine = mMap.addPolyline(options)
+        }
+
+        //Animation
+        valueAnimator = ValueAnimator.ofInt(0, 100)
+        valueAnimator.duration = 1100
+        valueAnimator.repeatCount = ValueAnimator.INFINITE
+        valueAnimator.interpolator = LinearInterpolator()
+        valueAnimator.addUpdateListener { value ->
+            val points = greyPolyLine!!.points
+            val percentValue = value.animatedValue.toString().toInt()
+            val size = points.size
+            val newPoints = (size * (percentValue / 100.0f)).toInt()
+            val p = points.subList(0, newPoints)
+            blackPolyLine!!.points = p
+        }
+        valueAnimator.start()
+
+        val latLngBound = LatLngBounds.Builder().include(model.eventOrigin!!)
+            .include(model.eventDest!!)
+            .build()
+        //Add icon for origin
+        model.eventDest?.let {dest->
+            mMap.addMarker(
+                MarkerOptions().position(dest)
+                    .icon(BitmapDescriptorFactory.defaultMarker()).title("Pickup Location")
+            )
+        }
+        // Populate views
+        estimatedTimeTextView.text = model.boundedTime
+        estimatedDistanceTxtView.text = model.distance
+
+        val cameraUpdate = CameraUpdateFactory
+            .newLatLngBounds(latLngBound, 100)
+        // moveCamera instead of animateCamera
+        mMap.moveCamera(cameraUpdate)
+        mMap.moveCamera(CameraUpdateFactory.zoomTo(mMap.cameraPosition!!.zoom - 1))
+
+        //Set layout visibility
+        declineView.visibility = View.VISIBLE
+        jobView.visibility = View.VISIBLE
+
+        //Countdown timer animation
+        Observable.interval(100, TimeUnit.MILLISECONDS)
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnNext{x->
+                circularProgressBar.progress += 1f
+            }
+            .takeUntil{aLong -> aLong == "100".toLong()}
+            .doOnComplete{
+                Snackbar.make(requireView(), "Accept Request", Snackbar.LENGTH_LONG)
+                    .show()
+            }.subscribe()
     }
 
 

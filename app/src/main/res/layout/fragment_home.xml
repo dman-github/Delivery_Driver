@@ -65,6 +65,7 @@
                     android:gravity="center">
 
                     <com.mikhaellopez.circularprogressbar.CircularProgressBar
+                        android:id="@+id/circularProgressbar"
                         android:layout_width="60dp"
                         android:layout_height="60dp"
                         app:cpb_background_progressbar_color="?colorOnBackground"
@@ -92,15 +93,16 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="8dp"
+                    android:drawableTint="?colorOnBackground"
                     android:text="4.25"
                     android:textColor="?colorOnBackground"
                     android:textSize="18sp"
-                    android:drawableTint="?colorOnBackground"
                     app:drawableRightCompat="@drawable/rating_star">
 
                 </TextView>
 
             </LinearLayout>
+
             <TextView
                 android:id="@+id/textEstimatedTime"
                 android:layout_width="wrap_content"
@@ -109,7 +111,8 @@
                 android:layout_marginTop="8dp"
                 android:text="2 min"
                 android:textColor="?colorOnBackground"
-                android:textSize="20sp"/>
+                android:textSize="20sp" />
+
             <TextView
                 android:id="@+id/textEstimatedDistance"
                 android:layout_width="wrap_content"
@@ -118,7 +121,7 @@
                 android:layout_marginTop="8dp"
                 android:text="0.4 km"
                 android:textColor="?colorOnBackground"
-                android:textSize="16sp"/>
+                android:textSize="16sp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

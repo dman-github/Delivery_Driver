@@ -10,17 +10,15 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.database.DatabaseReference
 import com.okada.android.data.LocationUsecase
 import com.okada.android.data.AccountUsecase
+import com.okada.android.data.DirectionsUsecase
+import com.okada.android.data.model.SelectedPlaceModel
 
-class HomeViewModel(private val accountUsecase: AccountUsecase,
-                    private val locationUsecase: LocationUsecase
+class HomeViewModel(
+    private val accountUsecase: AccountUsecase,
+    private val locationUsecase: LocationUsecase,
+    private val directionsUsecase: DirectionsUsecase
 ) : ViewModel() {
     private val _model = HomeModel()
-
-    // Online database
-    private lateinit var onlineRef: DatabaseReference
-    private lateinit var currentUserRef: DatabaseReference
-    private lateinit var driverLocationRef: DatabaseReference
-    private lateinit var geoFire: GeoFire
 
     private val _text = MutableLiveData<String>().apply {
         value = "This is home Fragment"
@@ -34,6 +32,10 @@ class HomeViewModel(private val accountUsecase: AccountUsecase,
     val updateMap: LiveData<LatLng> = _updateMap
 
 
+    private val _updateMapWithPlace = MutableLiveData<SelectedPlaceModel>()
+    val updateMapWithPlace: LiveData<SelectedPlaceModel> = _updateMapWithPlace
+
+
     init {
         accountUsecase.getLoggedInUser { result ->
             result.fold(onSuccess = { user ->
@@ -44,35 +46,68 @@ class HomeViewModel(private val accountUsecase: AccountUsecase,
             })
         }
     }
+    fun setGoogleApiKey(key: String) {
+        _model.apiKey = key
+    }
 
     fun clearMessage() {
         _showSnackbarMessage.value = null
     }
+
     fun updateLocation(location: Location?, context: Context) {
-        location?.let {location ->
+        location?.let { location ->
             val newPos = LatLng(location.latitude, location.longitude)
-            _model.uid?.also {uid->
-                locationUsecase.updateLocation(uid, location, context) {result->
+            _model.uid?.also { uid ->
+                locationUsecase.updateLocation(uid, location, context) { result ->
                     result.onSuccess {
                         _model.lastLocation = newPos
                         _updateMap.value = newPos
-                        _showSnackbarMessage.value = "Location updated\nLat: ${location.latitude}, Lon: ${location.longitude}}"
+                        _showSnackbarMessage.value =
+                            "Location updated\nLat: ${location.latitude}, Lon: ${location.longitude}}"
                     }
                     result.onFailure {
                         _showSnackbarMessage.value = it.message
                     }
                 }
-            }?:run {
+            } ?: run {
                 _showSnackbarMessage.value = "No logged in user"
             }
         }
     }
 
     fun removeUserLocation() {
-        _model.uid?.also {uid->
+        _model.uid?.also { uid ->
             locationUsecase.removeLocationFor(uid)
-        }?:run {
+        } ?: run {
             _showSnackbarMessage.value = "No logged in user"
+        }
+    }
+
+    fun calculatePath(requestedLocationStr: String, driverLocation: Location) {
+        val driverLocationStr = StringBuilder().append(driverLocation.latitude).append(",")
+            .append(driverLocation.longitude).toString()
+        //fetch directions between the 2 points from the Google directions api
+        directionsUsecase.getDirections(
+            driverLocationStr,
+            requestedLocationStr,
+            _model.apiKey
+        ) { result ->
+            result.onSuccess { placeModel ->
+                try {
+                    placeModel.eventOrigin =
+                        LatLng(driverLocation.latitude, driverLocation.longitude)
+                    placeModel.eventDest = LatLng(
+                        requestedLocationStr.split(",")[0].toDouble(),
+                        requestedLocationStr.split(",")[1].toDouble()
+                    )
+                    _updateMapWithPlace.value = placeModel
+                } catch (e: Exception) {
+                    _showSnackbarMessage.value = e.message
+                }
+            }
+            result.onFailure {
+                _showSnackbarMessage.value = it.message
+            }
         }
     }
 
