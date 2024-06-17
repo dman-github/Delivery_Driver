@@ -54,6 +54,7 @@ import com.vmadalin.easypermissions.annotations.AfterPermissionGranted
 import com.vmadalin.easypermissions.dialogs.SettingsDialog
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -61,7 +62,8 @@ import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionCallbacks {
+class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionCallbacks,
+    View.OnClickListener {
 
     private lateinit var homeViewModel: HomeViewModel
     private lateinit var mMap: GoogleMap
@@ -77,6 +79,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private var driverRequestModel: DriverRequestModel? = null
     private lateinit var valueAnimator: ValueAnimator
+    private var requestObservable: Disposable? = null
 
     companion object {
         private const val REQUEST_LOCATION_PERMISSION = 0x2233
@@ -101,15 +104,19 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         mapFragment = childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        initViews()
+        init()
+        return root
+    }
+
+    private fun initViews() {
         declineView = binding.chipDecline
         jobView = binding.layoutAccept
         estimatedDistanceTxtView = binding.textEstimatedDistance
         estimatedTimeTextView = binding.textEstimatedTime
         circularProgressBar = binding.circularProgressbar
-        init()
 
-
-        return root
+        declineView.setOnClickListener(this)
     }
 
     private fun init() {
@@ -337,6 +344,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
+            homeViewModel.setDriverRequest(event)
             fusedLocationProviderClient
                 .lastLocation
                 .addOnFailureListener { e ->
@@ -405,7 +413,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             .include(model.eventDest!!)
             .build()
         //Add icon for origin
-        model.eventDest?.let {dest->
+        model.eventDest?.let { dest ->
             mMap.addMarker(
                 MarkerOptions().position(dest)
                     .icon(BitmapDescriptorFactory.defaultMarker()).title("Pickup Location")
@@ -426,16 +434,30 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         jobView.visibility = View.VISIBLE
 
         //Countdown timer animation
-        Observable.interval(100, TimeUnit.MILLISECONDS)
+        requestObservable = Observable.interval(100, TimeUnit.MILLISECONDS)
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnNext{x->
+            .doOnNext { x ->
                 circularProgressBar.progress += 1f
             }
-            .takeUntil{aLong -> aLong == "100".toLong()}
-            .doOnComplete{
+            .takeUntil { aLong -> aLong == "100".toLong() }
+            .doOnComplete {
                 Snackbar.make(requireView(), "Accept Request", Snackbar.LENGTH_LONG)
                     .show()
             }.subscribe()
+    }
+
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.chip_decline -> {
+                if (homeViewModel.getDriverRequest() != null) {
+                    declineView.visibility = View.GONE
+                    jobView.visibility = View.GONE
+                    requestObservable?.dispose()
+                    circularProgressBar.progress = 0f
+                    homeViewModel.declineRequest()
+                }
+            }
+        }
     }
 
 

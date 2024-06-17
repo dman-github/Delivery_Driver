@@ -13,4 +13,6 @@ interface DataService {
                        successListener: OnSuccessListener<Void>)
 
     fun updatePushMessagingToken(uid: String, tokenModel: TokenModel, completion: (Result<Unit>) -> Unit)
+
+    fun retrievePushMessagingToken(uid: String, listener: ValueEventListener)
 }

@@ -6,7 +6,10 @@ import com.okada.android.services.LocationServiceImpl
 import com.okada.android.ui.home.HomeViewModel
 import com.okada.android.data.AccountUsecase
 import com.okada.android.data.DirectionsUsecase
+import com.okada.android.data.DriverRequestUsecase
 import com.okada.android.services.AccountServiceImpl
+import com.okada.android.services.DataServiceImpl
+import com.okada.android.services.DriverRequestServiceImpl
 
 /**
  * ViewModel provider factory to instantiate LoginViewModel.
@@ -24,7 +27,11 @@ class HomeViewModelFactory : ViewModelProvider.Factory {
                 locationUsecase = LocationUsecase(
                     locationService = LocationServiceImpl()
                 ),
-                directionsUsecase = DirectionsUsecase()
+                directionsUsecase = DirectionsUsecase(),
+                driverRequestUsecase = DriverRequestUsecase(
+                    driverRequestService = DriverRequestServiceImpl(),
+                    dataService = DataServiceImpl()
+                )
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

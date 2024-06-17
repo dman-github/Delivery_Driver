@@ -33,4 +33,8 @@ class DataServiceImpl: DataService {
                 completion(Result.success(Unit))
             }
     }
+
+    override fun retrievePushMessagingToken(uid: String, listener: ValueEventListener) {
+        pushTokenRef.child(uid).addListenerForSingleValueEvent(listener)
+    }
 }

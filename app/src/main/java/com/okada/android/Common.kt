@@ -78,4 +78,5 @@ object Common {
     val CLIENT_KEY: String = "clientKey"
     val PICKUP_LOCATION: String = "pickupLoc"
     val REQUEST_DRIVER_MSG_TITLE: String = "Driver requested!"
+    val DECLINE_REQUEST_MSG_TITLE: String = "Request Cancelled!"
 }

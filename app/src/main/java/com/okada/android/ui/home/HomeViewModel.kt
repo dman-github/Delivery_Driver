@@ -11,12 +11,15 @@ import com.google.firebase.database.DatabaseReference
 import com.okada.android.data.LocationUsecase
 import com.okada.android.data.AccountUsecase
 import com.okada.android.data.DirectionsUsecase
+import com.okada.android.data.DriverRequestUsecase
+import com.okada.android.data.model.DriverRequestModel
 import com.okada.android.data.model.SelectedPlaceModel
 
 class HomeViewModel(
     private val accountUsecase: AccountUsecase,
     private val locationUsecase: LocationUsecase,
-    private val directionsUsecase: DirectionsUsecase
+    private val directionsUsecase: DirectionsUsecase,
+    private val driverRequestUsecase: DriverRequestUsecase
 ) : ViewModel() {
     private val _model = HomeModel()
 
@@ -52,6 +55,14 @@ class HomeViewModel(
 
     fun clearMessage() {
         _showSnackbarMessage.value = null
+    }
+
+    fun setDriverRequest(req: DriverRequestModel) {
+        _model.driverRequestModel = req
+    }
+
+    fun getDriverRequest(): DriverRequestModel? {
+        return _model.driverRequestModel
     }
 
     fun updateLocation(location: Location?, context: Context) {
@@ -109,6 +120,23 @@ class HomeViewModel(
                 _showSnackbarMessage.value = it.message
             }
         }
+    }
+
+    fun declineRequest() {
+        _model.uid?.let{driverUid->
+            _model.driverRequestModel?.clientKey?.let {clientUid->
+                driverRequestUsecase.declineRouteRequest(driverUid, clientUid) { result ->
+                    result.fold(onSuccess = {
+                        // Push done
+                        _showSnackbarMessage.value = "request declined"
+                    }, onFailure = {
+                        // Error occurred
+                        _showSnackbarMessage.value = it.message
+                    })
+                }
+            }
+        }
+
     }
 
 }
