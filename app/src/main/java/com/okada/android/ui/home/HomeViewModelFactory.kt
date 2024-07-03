@@ -7,9 +7,11 @@ import com.okada.android.ui.home.HomeViewModel
 import com.okada.android.data.AccountUsecase
 import com.okada.android.data.DirectionsUsecase
 import com.okada.android.data.DriverRequestUsecase
+import com.okada.android.data.JobRequestUsecase
 import com.okada.android.services.AccountServiceImpl
 import com.okada.android.services.DataServiceImpl
 import com.okada.android.services.DriverRequestServiceImpl
+import com.okada.rider.android.services.JobRequestServiceImpl
 
 /**
  * ViewModel provider factory to instantiate LoginViewModel.
@@ -28,9 +30,8 @@ class HomeViewModelFactory : ViewModelProvider.Factory {
                     locationService = LocationServiceImpl()
                 ),
                 directionsUsecase = DirectionsUsecase(),
-                driverRequestUsecase = DriverRequestUsecase(
-                    driverRequestService = DriverRequestServiceImpl(),
-                    dataService = DataServiceImpl()
+                jobRequestUsecase = JobRequestUsecase(
+                    jobRequestService = JobRequestServiceImpl()
                 )
             ) as T
         }

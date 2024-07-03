@@ -7,7 +7,6 @@ import android.animation.ValueAnimator
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.Color
-import android.location.Geocoder
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
@@ -32,7 +31,6 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
@@ -59,7 +57,6 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.io.IOException
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionCallbacks,
@@ -141,6 +138,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         homeViewModel.updateMapWithPlace.observe(viewLifecycleOwner,
             Observer { model ->
                 drawPath(model)
+            })
+
+        homeViewModel.activeJobRxd.observe(viewLifecycleOwner,
+            Observer { ifRxd ->
+                if (ifRxd) {
+                    jobRequestShowPath()
+                }
             })
 
         // The google map builder
@@ -338,13 +342,21 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
-    fun onDriverRequest(event: DriverRequestModel) {
+    fun onDriverRequest(jobId: String) {
+        if (homeViewModel.hasJob()) {
+            homeViewModel.declineOtherJob(jobId)
+        } else {
+            homeViewModel.setActiveJob(jobId)
+            homeViewModel.retrieveActiveJob()
+        }
+    }
+
+    fun jobRequestShowPath() {
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
                 ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            homeViewModel.setDriverRequest(event)
             fusedLocationProviderClient
                 .lastLocation
                 .addOnFailureListener { e ->
@@ -353,7 +365,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                         "Error: $e", Toast.LENGTH_SHORT
                     ).show();
                 }.addOnSuccessListener { lastLocation ->
-                    homeViewModel.calculatePath(event.pickupLocation, lastLocation)
+                   homeViewModel.calculatePath(lastLocation)
                 }
         }
     }
@@ -449,12 +461,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.chip_decline -> {
-                if (homeViewModel.getDriverRequest() != null) {
+                if (homeViewModel.hasJob()) {
                     declineView.visibility = View.GONE
                     jobView.visibility = View.GONE
                     requestObservable?.dispose()
                     circularProgressBar.progress = 0f
-                    homeViewModel.declineRequest()
+                    homeViewModel.declineActiveJob()
                 }
             }
         }

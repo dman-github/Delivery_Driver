@@ -7,21 +7,42 @@ class JobRequestUsecase(
     val jobRequestService: JobRequestService
 ) {
     // in-memory cache of the currentJobId  object
-    private var currentJobId: String? = null
+    private var activeJobId: String? = null
 
     val hasActiveJob: Boolean
-        get() = currentJobId != null
+        get() = activeJobId != null
 
 
     fun setCurrentJobId(jobId: String) {
-        currentJobId = jobId
+        activeJobId = jobId
     }
 
-    fun declineJobRequest(completion: (Result<Unit>) -> Unit) {
-        currentJobId?.let { jobId ->
-            // Driver is changed to the new driver
+
+    fun declineJobRequest(jobId: String, completion: (Result<Unit>) -> Unit) {
+        // The job request for this jobId is declined
+        // This can be the current active job , or any other jobs that are received while the driver is having an active Job
+        jobRequestService.declineJob(jobId) { result ->
+            result.fold(onSuccess = {
+                if (activeJobId == jobId) {
+                    // if the active job is declined, set it to null
+                    activeJobId = null
+                }
+                completion(Result.success(Unit))
+            }, onFailure = {
+                // Error occurred
+                completion(Result.failure(it))
+            })
+        }
+    }
+
+    fun declineActiveJobRequest(completion: (Result<Unit>) -> Unit) {
+        activeJobId?.let { jobId ->
+            // The job request for this jobId is declined
+            // This can be the current active job , or any other jobs that are received while the driver is having an active Job
             jobRequestService.declineJob(jobId) { result ->
                 result.fold(onSuccess = {
+                    // if the active job is declined, set it to null
+                    activeJobId = null
                     completion(Result.success(Unit))
                 }, onFailure = {
                     // Error occurred
@@ -32,7 +53,7 @@ class JobRequestUsecase(
     }
 
     fun acceptJobRequest(completion: (Result<JobInfoModel>) -> Unit) {
-        currentJobId?.let { jobId ->
+        activeJobId?.let { jobId ->
             // Driver is changed to the new driver
             jobRequestService.acceptJob(jobId) { result ->
                 result.fold(onSuccess = {
@@ -44,6 +65,21 @@ class JobRequestUsecase(
                             completion(Result.failure(it))
                         })
                     }
+                }, onFailure = {
+                    // Error occurred
+                    completion(Result.failure(it))
+                })
+            }
+        }
+    }
+
+
+    fun fetchJobRequest(completion: (Result<JobInfoModel>) -> Unit) {
+        activeJobId?.let { jobId ->
+            // Fetch the details of th job
+            jobRequestService.fetchCurrentJob(jobId) { result ->
+                result.fold(onSuccess = {
+                    completion(Result.success(it))
                 }, onFailure = {
                     // Error occurred
                     completion(Result.failure(it))

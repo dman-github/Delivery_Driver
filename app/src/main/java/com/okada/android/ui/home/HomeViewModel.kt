@@ -10,7 +10,6 @@ import com.okada.android.data.LocationUsecase
 import com.okada.android.data.AccountUsecase
 import com.okada.android.data.DirectionsUsecase
 import com.okada.android.data.JobRequestUsecase
-import com.okada.android.data.model.DriverRequestModel
 import com.okada.android.data.model.SelectedPlaceModel
 
 class HomeViewModel(
@@ -32,6 +31,8 @@ class HomeViewModel(
     private val _updateMap = MutableLiveData<LatLng>()
     val updateMap: LiveData<LatLng> = _updateMap
 
+    private val _activeJobRxd = MutableLiveData<Boolean>()
+    val activeJobRxd: LiveData<Boolean> = _activeJobRxd
 
     private val _updateMapWithPlace = MutableLiveData<SelectedPlaceModel>()
     val updateMapWithPlace: LiveData<SelectedPlaceModel> = _updateMapWithPlace
@@ -47,6 +48,7 @@ class HomeViewModel(
             })
         }
     }
+
     fun setGoogleApiKey(key: String) {
         _model.apiKey = key
     }
@@ -55,13 +57,14 @@ class HomeViewModel(
         _showSnackbarMessage.value = null
     }
 
-    fun setDriverRequest(req: DriverRequestModel) {
-        _model.driverRequestModel = req
+    fun setActiveJob(jobId: String) {
+        jobRequestUsecase.setCurrentJobId(jobId)
     }
 
-    fun getDriverRequest(): DriverRequestModel? {
-        return _model.driverRequestModel
+    fun hasJob(): Boolean {
+        return jobRequestUsecase.hasActiveJob
     }
+
 
     fun updateLocation(location: Location?, context: Context) {
         location?.let { location ->
@@ -92,49 +95,74 @@ class HomeViewModel(
         }
     }
 
-    fun calculatePath(requestedLocationStr: String, driverLocation: Location) {
-        val driverLocationStr = StringBuilder().append(driverLocation.latitude).append(",")
-            .append(driverLocation.longitude).toString()
-        //fetch directions between the 2 points from the Google directions api
-        directionsUsecase.getDirections(
-            driverLocationStr,
-            requestedLocationStr,
-            _model.apiKey
-        ) { result ->
-            result.onSuccess { placeModel ->
-                try {
-                    placeModel.eventOrigin =
-                        LatLng(driverLocation.latitude, driverLocation.longitude)
-                    placeModel.eventDest = LatLng(
-                        requestedLocationStr.split(",")[0].toDouble(),
-                        requestedLocationStr.split(",")[1].toDouble()
-                    )
-                    _updateMapWithPlace.value = placeModel
-                } catch (e: Exception) {
-                    _showSnackbarMessage.value = e.message
+    fun calculatePath(driverLocation: Location) {
+        _model.curentJobInfo?.jobDetails?.pickupLocation?.let { pickupLocation ->
+            val requestedLocationStr = StringBuilder().append(pickupLocation.latitude).append(",")
+                .append(pickupLocation.longitude).toString()
+            val driverLocationStr = StringBuilder().append(driverLocation.latitude).append(",")
+                .append(driverLocation.longitude).toString()
+            //fetch directions between the 2 points from the Google directions api
+            directionsUsecase.getDirections(
+                driverLocationStr,
+                requestedLocationStr,
+                _model.apiKey
+            ) { result ->
+                result.onSuccess { placeModel ->
+                    try {
+                        placeModel.eventOrigin =
+                            LatLng(driverLocation.latitude, driverLocation.longitude)
+                        placeModel.eventDest = LatLng(
+                            requestedLocationStr.split(",")[0].toDouble(),
+                            requestedLocationStr.split(",")[1].toDouble()
+                        )
+                        _updateMapWithPlace.value = placeModel
+                    } catch (e: Exception) {
+                        _showSnackbarMessage.value = e.message
+                    }
                 }
-            }
-            result.onFailure {
-                _showSnackbarMessage.value = it.message
+                result.onFailure {
+                    _showSnackbarMessage.value = it.message
+                }
             }
         }
     }
 
-    fun declineRequest() {
-        _model.uid?.let{driverUid->
-            _model.driverRequestModel?.jobId?.let {jobId->
-                jobRequestUsecase.declineJobRequest() {result->
-                    result.fold(onSuccess = {
-                        // Push done
-                        _showSnackbarMessage.value = "request declined"
-                    }, onFailure = {
-                        // Error occurred
-                        _showSnackbarMessage.value = it.message
-                    })
-                }
+    fun declineActiveJob() {
+        if (jobRequestUsecase.hasActiveJob) {
+            jobRequestUsecase.declineActiveJobRequest { result ->
+                result.fold(onSuccess = {
+                    // Push done
+                    _showSnackbarMessage.value = "active request declined"
+                }, onFailure = {
+                    // Error occurred
+                    _showSnackbarMessage.value = it.message
+                })
             }
         }
+    }
 
+    fun declineOtherJob(jobId: String) {
+        jobRequestUsecase.declineJobRequest(jobId) { result ->
+            result.fold(onSuccess = {
+                // Push done
+                _showSnackbarMessage.value = "request declined"
+            }, onFailure = {
+                // Error occurred
+                _showSnackbarMessage.value = it.message
+            })
+        }
+    }
+
+    fun retrieveActiveJob() {
+        jobRequestUsecase.fetchJobRequest() { result ->
+            result.fold(onSuccess = { jobRequestModel ->
+                _model.curentJobInfo = jobRequestModel
+                _activeJobRxd.value = true
+            }, onFailure = {
+                // Error occurred
+                _showSnackbarMessage.value = it.message
+            })
+        }
     }
 
 }

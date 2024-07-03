@@ -23,9 +23,9 @@ class FirebaseMessagingIdService : FirebaseMessagingService() {
         val data = message.data
         message.notification?.let { noti ->
             if (noti.title.equals(REQUEST_DRIVER_MSG_TITLE)) {
-                data[CLIENT_KEY]?.let { key ->
-                    data[PICKUP_LOCATION]?.let { loc ->
-                        EventBus.getDefault().postSticky(DriverRequestModel(key, loc))
+                data[CLIENT_KEY]?.let { jobId ->
+                    data[PICKUP_LOCATION]?.let { _ ->
+                        EventBus.getDefault().postSticky(jobId)
                     }
                 }
             } else {
