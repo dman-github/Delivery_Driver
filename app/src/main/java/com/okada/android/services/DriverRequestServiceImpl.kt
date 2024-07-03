@@ -1,6 +1,7 @@
 package com.okada.android.services
 
 import com.google.firebase.functions.FirebaseFunctions
+import com.okada.android.Common
 
 class DriverRequestServiceImpl : DriverRequestService {
     val cloudFuncRequestDriverName = "sendPN"
@@ -12,7 +13,7 @@ class DriverRequestServiceImpl : DriverRequestService {
     ) {
         val data = hashMapOf(
             "token" to pushToken,
-            "title" to "Request Declined!",
+            "title" to Common.DECLINE_REQUEST_MSG_TITLE,
             "body" to "This message is to check the decline request functionality",
             "clientKey" to uid,
             "pickupLoc" to ""

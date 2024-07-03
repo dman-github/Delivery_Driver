@@ -5,13 +5,11 @@ import android.location.Location
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.firebase.geofire.GeoFire
 import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.database.DatabaseReference
 import com.okada.android.data.LocationUsecase
 import com.okada.android.data.AccountUsecase
 import com.okada.android.data.DirectionsUsecase
-import com.okada.android.data.DriverRequestUsecase
+import com.okada.android.data.JobRequestUsecase
 import com.okada.android.data.model.DriverRequestModel
 import com.okada.android.data.model.SelectedPlaceModel
 
@@ -19,7 +17,7 @@ class HomeViewModel(
     private val accountUsecase: AccountUsecase,
     private val locationUsecase: LocationUsecase,
     private val directionsUsecase: DirectionsUsecase,
-    private val driverRequestUsecase: DriverRequestUsecase
+    private val jobRequestUsecase: JobRequestUsecase
 ) : ViewModel() {
     private val _model = HomeModel()
 
@@ -124,8 +122,8 @@ class HomeViewModel(
 
     fun declineRequest() {
         _model.uid?.let{driverUid->
-            _model.driverRequestModel?.clientKey?.let {clientUid->
-                driverRequestUsecase.declineRouteRequest(driverUid, clientUid) { result ->
+            _model.driverRequestModel?.jobId?.let {jobId->
+                jobRequestUsecase.declineJobRequest() {result->
                     result.fold(onSuccess = {
                         // Push done
                         _showSnackbarMessage.value = "request declined"
