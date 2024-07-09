@@ -33,6 +33,7 @@ class SplashViewModel(
 
     }
     fun startSplashTimer() {
+        _animationDone.value = false
         Log.i("okada Log","startSplashTimer")
         Handler(Looper.getMainLooper()).postDelayed({
             _animationDone.value = true
