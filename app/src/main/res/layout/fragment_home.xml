@@ -2,6 +2,7 @@
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -21,7 +22,8 @@
         android:visibility="gone"
         app:chipBackgroundColor="?colorSecondary"
         app:chipIcon="@drawable/decline"
-        app:chipIconTint="?colorOnSecondary" />
+        app:chipIconTint="?colorOnSecondary"
+        tools:visibility="visible" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/layout_accept"
@@ -31,7 +33,8 @@
         android:layout_margin="8dp"
         android:visibility="gone"
         app:cardBackgroundColor="?colorPrimary"
-        app:cardCornerRadius="8dp">
+        app:cardCornerRadius="8dp"
+        tools:visibility="visible">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -93,11 +96,11 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="8dp"
-                    android:drawableTint="?colorOnBackground"
                     android:text="4.25"
                     android:textColor="?colorOnBackground"
                     android:textSize="18sp"
-                    app:drawableRightCompat="@drawable/rating_star">
+                    app:drawableRightCompat="@drawable/rating_star"
+                    app:drawableTint="?colorOnBackground">
 
                 </TextView>
 
@@ -125,5 +128,126 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
+    <androidx.cardview.widget.CardView
+        android:id="@+id/layoutStartJob"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="8dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="?colorPrimary"
+        app:cardCornerRadius="8dp"
+        tools:visibility="visible">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:src="@drawable/keyboard_arrow_down" />
+
+                <ImageView
+                    android:id="@+id/imgStartJob"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginRight="8dp"
+                    android:src="@drawable/person"
+                    app:tint="?colorOnBackground" />
+
+                <TextView
+                    android:id="@+id/txtStartJobEstimatedTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_toLeftOf="@id/imgStartJob"
+                    android:text="2 min"
+                    android:textColor="?colorOnBackground" />
+
+                <TextView
+                    android:id="@+id/textStartJobEstimatedDistance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_toEndOf="@id/imgStartJob"
+                    android:text="0.4 km"
+                    android:textColor="?colorOnBackground" />
+
+                <ImageView
+                    android:id="@+id/imgStartBullet"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:src="@drawable/format_list_bulleted"
+                    app:tint="?colorOnBackground" />
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="@color/app_dark_grey" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imgPhoneCall"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentStart="true"
+                    android:src="@drawable/phone_call"
+                    app:tint="?colorOnBackground"></ImageView>
+
+                <TextView
+                    android:id="@+id/txtClientName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="8dp"
+                    android:text="Okada"
+                    android:textColor="?colorOnBackground"
+                    android:textSize="22sp">
+
+                </TextView>
+
+                <ImageView
+                    android:id="@+id/imgThreeDot"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentEnd="true"
+                    android:src="@drawable/three_dot"
+                    app:tint="?colorOnBackground"></ImageView>
+
+            </RelativeLayout>
+
+            <com.github.leandroborgesferreira.loadingbutton.customViews.CircularProgressButton
+                android:id="@+id/progressBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:layout_marginTop="20dp"
+                android:text="@string/startJob"
+                android:background="@drawable/curved_rectangle_all_sides"
+                app:spinning_bar_color="@color/white"
+                app:spinning_bar_padding="6dp"
+                app:spinning_bar_width="4dp" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 </FrameLayout>

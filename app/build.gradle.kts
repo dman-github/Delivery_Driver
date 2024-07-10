@@ -135,4 +135,7 @@ dependencies {
 
     //RxJava
     implementation ("io.reactivex.rxjava2:rxandroid:2.1.1")
+
+    //Loading button
+    implementation("com.github.leandroborgesferreira:loading-button-android:2.3.0")
 }

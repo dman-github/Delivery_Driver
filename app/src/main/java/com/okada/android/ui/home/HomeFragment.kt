@@ -68,6 +68,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var jobView: CardView
     private lateinit var estimatedDistanceTxtView: TextView
     private lateinit var estimatedTimeTextView: TextView
+    private lateinit var textRating: TextView
     private lateinit var circularProgressBar: CircularProgressBar
     private var _binding: FragmentHomeBinding? = null
     private lateinit var mapFragment: SupportMapFragment
@@ -112,7 +113,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         estimatedDistanceTxtView = binding.textEstimatedDistance
         estimatedTimeTextView = binding.textEstimatedTime
         circularProgressBar = binding.circularProgressbar
-
+        textRating = binding.txtRating
         declineView.setOnClickListener(this)
     }
 
@@ -453,8 +454,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             }
             .takeUntil { aLong -> aLong == "100".toLong() }
             .doOnComplete {
-                Snackbar.make(requireView(), "Accept Request", Snackbar.LENGTH_LONG)
-                    .show()
+                createJobPlan(model.boundedTime!!, model.distance!!)
             }.subscribe()
     }
 
@@ -473,4 +473,20 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     }
 
 
+    private fun createJobPlan(duration: String, distance: String) {
+        setLayoutProcess(true)
+    }
+
+    private fun setLayoutProcess(show: Boolean) {
+        var color = -1
+        if (show) {
+            color = ContextCompat.getColor(requireContext(), R.color.app_dark_grey)
+            circularProgressBar.indeterminateMode = true
+            textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star_dark_gray,0)
+        } else {
+            color = ContextCompat.getColor(requireContext(), R.color.white)
+            circularProgressBar.indeterminateMode = false
+            textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star,0)
+        }
+    }
 }
