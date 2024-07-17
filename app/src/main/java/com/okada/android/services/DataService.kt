@@ -7,8 +7,10 @@ import com.okada.android.data.model.DriverInfo
 import com.okada.android.data.model.TokenModel
 
 interface DataService {
-    fun checkIfUserInfoExists(uid: String, listener: ValueEventListener)
-    fun createUserInfo(uid: String, driverInfo: DriverInfo,
+    fun checkIfDriverInfoExists(uid: String, listener: ValueEventListener)
+
+    fun fetchUserInfo(uid: String, listener: ValueEventListener)
+    fun createDriverInfo(uid: String, driverInfo: DriverInfo,
                        failureListener: OnFailureListener,
                        successListener: OnSuccessListener<Void>)
 

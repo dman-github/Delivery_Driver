@@ -5,6 +5,7 @@ import android.Manifest
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.animation.ValueAnimator
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Color
 import android.os.Bundle
@@ -14,13 +15,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.core.widget.ImageViewCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.github.leandroborgesferreira.loadingbutton.customViews.CircularProgressButton
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -42,6 +46,10 @@ import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.gms.maps.model.SquareCap
 import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.mikhaellopez.circularprogressbar.CircularProgressBar
 import com.okada.android.R
 import com.okada.android.data.model.DriverRequestModel
@@ -68,8 +76,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var jobView: CardView
     private lateinit var estimatedDistanceTxtView: TextView
     private lateinit var estimatedTimeTextView: TextView
+    //Accept Job Layout
     private lateinit var textRating: TextView
+    private lateinit var textType: TextView
+    private lateinit var startJobEstimatedDistanceTxtView: TextView
+    private lateinit var startJobEstimatedTimeTxtView: TextView
+    private lateinit var imgPerson: ImageView
+    private lateinit var imgPhoneCall: ImageView
+    private lateinit var btnStartTrip: CircularProgressButton
     private lateinit var circularProgressBar: CircularProgressBar
+
     private var _binding: FragmentHomeBinding? = null
     private lateinit var mapFragment: SupportMapFragment
     private lateinit var locationRequest: LocationRequest
@@ -78,6 +94,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private var driverRequestModel: DriverRequestModel? = null
     private lateinit var valueAnimator: ValueAnimator
     private var requestObservable: Disposable? = null
+
+    private var isTripStart = false
+    private var onlineSystemAlreadyRegistered = false
 
     companion object {
         private const val REQUEST_LOCATION_PERMISSION = 0x2233
@@ -114,6 +133,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         estimatedTimeTextView = binding.textEstimatedTime
         circularProgressBar = binding.circularProgressbar
         textRating = binding.txtRating
+        imgPerson = binding.imgPerson
+        imgPhoneCall = binding.imgPhoneCall
+        btnStartTrip = binding.startButton
+        startJobEstimatedDistanceTxtView = binding.textStartJobEstimatedDistance
+        startJobEstimatedTimeTxtView = binding.txtStartJobEstimatedTime
+        //textType = binding.textType
         declineView.setOnClickListener(this)
     }
 
@@ -348,7 +373,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             homeViewModel.declineOtherJob(jobId)
         } else {
             homeViewModel.setActiveJob(jobId)
-            homeViewModel.retrieveActiveJob()
         }
     }
 
@@ -475,6 +499,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
     private fun createJobPlan(duration: String, distance: String) {
         setLayoutProcess(true)
+        homeViewModel.retrieveActiveJob()
     }
 
     private fun setLayoutProcess(show: Boolean) {
@@ -486,7 +511,14 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         } else {
             color = ContextCompat.getColor(requireContext(), R.color.white)
             circularProgressBar.indeterminateMode = false
+            circularProgressBar.progress = 0f
             textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star,0)
         }
+
+        estimatedDistanceTxtView.setTextColor(color)
+        estimatedTimeTextView.setTextColor(color)
+        textRating.setTextColor(color)
+        //textType
+        ImageViewCompat.setImageTintList(imgPerson, ColorStateList.valueOf(color))
     }
 }

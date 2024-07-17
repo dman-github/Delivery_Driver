@@ -8,6 +8,7 @@ import com.okada.android.data.AccountUsecase
 import com.okada.android.data.DirectionsUsecase
 import com.okada.android.data.DriverRequestUsecase
 import com.okada.android.data.JobRequestUsecase
+import com.okada.android.data.ProfileUsecase
 import com.okada.android.services.AccountServiceImpl
 import com.okada.android.services.DataServiceImpl
 import com.okada.android.services.DriverRequestServiceImpl
@@ -30,6 +31,9 @@ class HomeViewModelFactory : ViewModelProvider.Factory {
                     locationService = LocationServiceImpl()
                 ),
                 directionsUsecase = DirectionsUsecase(),
+                profileUsecase = ProfileUsecase(
+                    dataService = DataServiceImpl()
+                ),
                 jobRequestUsecase = JobRequestUsecase(
                     jobRequestService = JobRequestServiceImpl()
                 )

@@ -39,7 +39,7 @@ class RegisterViewModel(private val accountUsecase: AccountUsecase,
         biometricId: String
     ) {
         accountUsecase.loggedInUser?.let {user->
-            profileUsecase.createUserInfo(firstname, lastname, biometricId, user) { result ->
+            profileUsecase.createDriverInfo(firstname, lastname, biometricId, user) { result ->
                 result.fold(onSuccess = {
                     var model = DriverInfo()
                     model.firstname = firstname

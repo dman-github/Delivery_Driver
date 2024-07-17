@@ -81,6 +81,7 @@
                         app:cpb_round_border="false" />
 
                     <ImageView
+                        android:id="@+id/imgPerson"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_centerInParent="true"
@@ -211,7 +212,7 @@
                     android:layout_height="30dp"
                     android:layout_alignParentStart="true"
                     android:src="@drawable/phone_call"
-                    app:tint="?colorOnBackground"></ImageView>
+                    app:tint="?colorOnBackground" />
 
                 <TextView
                     android:id="@+id/txtClientName"
@@ -232,12 +233,12 @@
                     android:layout_height="30dp"
                     android:layout_alignParentEnd="true"
                     android:src="@drawable/three_dot"
-                    app:tint="?colorOnBackground"></ImageView>
+                    app:tint="?colorOnBackground" />
 
             </RelativeLayout>
 
             <com.github.leandroborgesferreira.loadingbutton.customViews.CircularProgressButton
-                android:id="@+id/progressBar"
+                android:id="@+id/startButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingLeft="10dp"

@@ -8,17 +8,23 @@ import com.okada.android.data.model.DriverInfo
 import com.okada.android.data.model.TokenModel
 
 class DataServiceImpl: DataService {
-    private val databaseRefUser = FirebaseDatabase.getInstance().getReference("DriverInfo")
+    private val databaseRefDriver = FirebaseDatabase.getInstance().getReference("DriverInfo")
+    private val databaseRefUser = FirebaseDatabase.getInstance().getReference("UserInfo")
     private val pushTokenRef = FirebaseDatabase.getInstance().getReference("PushTokens")
-    override fun checkIfUserInfoExists(uid: String, listener: ValueEventListener) {
+    override fun checkIfDriverInfoExists(uid: String, listener: ValueEventListener) {
+        // Set up Firebase listener
+        databaseRefDriver.child(uid).addListenerForSingleValueEvent(listener)
+    }
+
+    override fun fetchUserInfo(uid: String, listener: ValueEventListener) {
         // Set up Firebase listener
         databaseRefUser.child(uid).addListenerForSingleValueEvent(listener)
     }
 
-    override fun createUserInfo(uid: String, driverInfo: DriverInfo,
+    override fun createDriverInfo(uid: String, driverInfo: DriverInfo,
                                 failureListener: OnFailureListener,
                                 successListener: OnSuccessListener<Void>) {
-        databaseRefUser.child(uid)
+        databaseRefDriver.child(uid)
             .setValue(driverInfo)
             .addOnFailureListener(failureListener)
             .addOnSuccessListener(successListener)

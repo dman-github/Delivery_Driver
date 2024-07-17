@@ -10,12 +10,14 @@ import com.okada.android.data.LocationUsecase
 import com.okada.android.data.AccountUsecase
 import com.okada.android.data.DirectionsUsecase
 import com.okada.android.data.JobRequestUsecase
+import com.okada.android.data.ProfileUsecase
 import com.okada.android.data.model.SelectedPlaceModel
 
 class HomeViewModel(
     private val accountUsecase: AccountUsecase,
     private val locationUsecase: LocationUsecase,
     private val directionsUsecase: DirectionsUsecase,
+    private val profileUsecase: ProfileUsecase,
     private val jobRequestUsecase: JobRequestUsecase
 ) : ViewModel() {
     private val _model = HomeModel()
@@ -156,8 +158,16 @@ class HomeViewModel(
     fun retrieveActiveJob() {
         jobRequestUsecase.fetchJobRequest() { result ->
             result.fold(onSuccess = { jobRequestModel ->
-                _model.curentJobInfo = jobRequestModel
-                _activeJobRxd.value = true
+                profileUsecase.fetchClientInfo(jobRequestModel.clientUid!!) {result->
+                    result.fold(onSuccess = { userInfoModel ->
+                        _model.currentJobClient = userInfoModel
+                        _model.curentJobInfo = jobRequestModel
+                        _activeJobRxd.value = true
+                    }, onFailure = {
+                        // Error occurred
+                        _showSnackbarMessage.value = it.message
+                    })
+                }
             }, onFailure = {
                 // Error occurred
                 _showSnackbarMessage.value = it.message

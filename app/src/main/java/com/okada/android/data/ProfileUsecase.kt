@@ -7,6 +7,7 @@ import com.google.firebase.database.getValue
 import com.okada.android.data.model.LoggedInUser
 import com.okada.android.data.model.DriverInfo
 import com.okada.android.data.model.TokenModel
+import com.okada.android.data.model.UserInfo
 import com.okada.android.services.DataService
 import kotlin.Result
 
@@ -25,7 +26,7 @@ class ProfileUsecase(val dataService: DataService) {
 
     fun checkProfileExists(user: LoggedInUser, completion: (Result<DriverInfo?>) -> Unit) {
 
-        dataService.checkIfUserInfoExists(user.userId, object : ValueEventListener {
+        dataService.checkIfDriverInfoExists(user.userId, object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 // Get Post object and use the values to update the UI
                 val driverInfo = dataSnapshot.getValue<DriverInfo>()
@@ -40,7 +41,7 @@ class ProfileUsecase(val dataService: DataService) {
         })
     }
 
-    fun createUserInfo(
+    fun createDriverInfo(
         firstname: String,
         lastname: String,
         biometricId: String,
@@ -52,13 +53,27 @@ class ProfileUsecase(val dataService: DataService) {
         driverInfo.lastname = lastname
         driverInfo.email = user.email
         driverInfo.biometricId = biometricId
-        dataService.createUserInfo(user.userId, driverInfo,
+        dataService.createDriverInfo(user.userId, driverInfo,
             failureListener = { exception ->
                 completion(Result.failure(exception))
             }, {
                 completion(Result.success(Unit))
             })
 
+    }
+
+    fun fetchClientInfo(clientId: String, completion: (Result<UserInfo?>) -> Unit) {
+        dataService.checkIfDriverInfoExists(clientId, object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                // Get Post object and use the values to update the UI
+                val userInfo = dataSnapshot.getValue<UserInfo>()
+                completion(Result.success(userInfo))
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                completion(Result.failure(databaseError.toException()))
+            }
+        })
     }
 
     fun sendPushNotificationToken(uid: String, tokenM: TokenModel, completion: (Result<Unit>) -> Unit) {
