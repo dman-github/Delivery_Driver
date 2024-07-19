@@ -36,6 +36,10 @@ class HomeViewModel(
     private val _activeJobRxd = MutableLiveData<Boolean>()
     val activeJobRxd: LiveData<Boolean> = _activeJobRxd
 
+    private val _acceptedJob = MutableLiveData<Boolean>()
+    val acceptedJob: LiveData<Boolean> = _acceptedJob
+
+
     private val _updateMapWithPlace = MutableLiveData<SelectedPlaceModel>()
     val updateMapWithPlace: LiveData<SelectedPlaceModel> = _updateMapWithPlace
 
@@ -74,7 +78,7 @@ class HomeViewModel(
             _model.uid?.also { uid ->
                 locationUsecase.updateLocation(uid, location, context) { result ->
                     result.onSuccess {
-                        _model.lastLocation = newPos
+                        _model.lastLocation = location
                         _updateMap.value = newPos
                         _showSnackbarMessage.value =
                             "Location updated\nLat: ${location.latitude}, Lon: ${location.longitude}}"
@@ -165,13 +169,30 @@ class HomeViewModel(
                         _activeJobRxd.value = true
                     }, onFailure = {
                         // Error occurred
-                        _showSnackbarMessage.value = it.message
+                        _showSnackbarMessage.value = "Client information not found"
                     })
                 }
             }, onFailure = {
                 // Error occurred
-                _showSnackbarMessage.value = it.message
+                _showSnackbarMessage.value = "Job information not found"
             })
+        }
+    }
+
+    fun acceptActiveJob() {
+        _model.lastLocation?.let{loc->
+            _model.uid?.let { uid ->
+                jobRequestUsecase.acceptJobRequest(loc) { result ->
+                    result.fold(onSuccess = {
+                        _model.acceptJob = true
+                        _acceptedJob.value = true
+                        locationUsecase.removeLocationFor(uid)
+                    }, onFailure = {
+                        // Error occurred
+                        _showSnackbarMessage.value = "Job information not found"
+                    })
+                }
+            }
         }
     }
 

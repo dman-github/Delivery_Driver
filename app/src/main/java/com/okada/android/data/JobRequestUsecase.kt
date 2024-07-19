@@ -1,5 +1,7 @@
 package com.okada.android.data
 
+import android.location.Location
+import com.okada.android.data.model.AppLocation
 import com.okada.android.data.model.JobInfoModel
 import com.okada.rider.android.services.JobRequestService
 
@@ -52,10 +54,11 @@ class JobRequestUsecase(
         }
     }
 
-    fun acceptJobRequest(completion: (Result<JobInfoModel>) -> Unit) {
+    fun acceptJobRequest(location: Location, completion: (Result<JobInfoModel>) -> Unit) {
         activeJobId?.let { jobId ->
             // Driver is changed to the new driver
-            jobRequestService.acceptJob(jobId) { result ->
+            jobRequestService.acceptJob(jobId,
+                AppLocation(location.latitude, location.longitude)) { result ->
                 result.fold(onSuccess = {
                     jobRequestService.fetchCurrentJob(jobId) { result ->
                         result.fold(onSuccess = {

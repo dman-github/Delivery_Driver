@@ -73,7 +73,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var homeViewModel: HomeViewModel
     private lateinit var mMap: GoogleMap
     private lateinit var declineView: Chip
-    private lateinit var jobView: CardView
+    private lateinit var jobPreviewView: CardView
+    private lateinit var jobAcceptView: CardView
     private lateinit var estimatedDistanceTxtView: TextView
     private lateinit var estimatedTimeTextView: TextView
     //Accept Job Layout
@@ -128,7 +129,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
     private fun initViews() {
         declineView = binding.chipDecline
-        jobView = binding.layoutAccept
+        jobAcceptView = binding.layoutStartJob
+        jobPreviewView = binding.layoutAccept
         estimatedDistanceTxtView = binding.textEstimatedDistance
         estimatedTimeTextView = binding.textEstimatedTime
         circularProgressBar = binding.circularProgressbar
@@ -138,7 +140,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         btnStartTrip = binding.startButton
         startJobEstimatedDistanceTxtView = binding.textStartJobEstimatedDistance
         startJobEstimatedTimeTxtView = binding.txtStartJobEstimatedTime
-        //textType = binding.textType
+        textType = binding.txtTypeDriver
         declineView.setOnClickListener(this)
     }
 
@@ -170,6 +172,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             Observer { ifRxd ->
                 if (ifRxd) {
                     jobRequestShowPath()
+                }
+            })
+
+        homeViewModel.acceptedJob.observe(viewLifecycleOwner,
+            Observer { accepted ->
+                if (accepted) {
+                    jobPlanAccepted()
                 }
             })
 
@@ -253,7 +262,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     override fun onDestroy() {
         super.onDestroy()
         removeLocation()
-
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -373,6 +381,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             homeViewModel.declineOtherJob(jobId)
         } else {
             homeViewModel.setActiveJob(jobId)
+            homeViewModel.retrieveActiveJob()
         }
     }
 
@@ -468,8 +477,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
         //Set layout visibility
         declineView.visibility = View.VISIBLE
-        jobView.visibility = View.VISIBLE
-
+        jobAcceptView.visibility = View.INVISIBLE
+        jobPreviewView.visibility = View.VISIBLE
         //Countdown timer animation
         requestObservable = Observable.interval(100, TimeUnit.MILLISECONDS)
             .observeOn(AndroidSchedulers.mainThread())
@@ -487,7 +496,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             R.id.chip_decline -> {
                 if (homeViewModel.hasJob()) {
                     declineView.visibility = View.GONE
-                    jobView.visibility = View.GONE
+                    jobPreviewView.visibility = View.GONE
                     requestObservable?.dispose()
                     circularProgressBar.progress = 0f
                     homeViewModel.declineActiveJob()
@@ -499,26 +508,32 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
     private fun createJobPlan(duration: String, distance: String) {
         setLayoutProcess(true)
-        homeViewModel.retrieveActiveJob()
+        homeViewModel.acceptActiveJob()
+    }
+
+    private fun jobPlanAccepted() {
+        setLayoutProcess(false)
+        jobAcceptView.visibility = View.VISIBLE
+        jobPreviewView.visibility = View.INVISIBLE
     }
 
     private fun setLayoutProcess(show: Boolean) {
         var color = -1
         if (show) {
-            color = ContextCompat.getColor(requireContext(), R.color.app_dark_grey)
+           // color = ContextCompat.getColor(requireContext(), R.color.app_red_dark)
             circularProgressBar.indeterminateMode = true
-            textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star_dark_gray,0)
+           // textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star_dark_gray,0)
         } else {
-            color = ContextCompat.getColor(requireContext(), R.color.white)
+           // color = ContextCompat.getColor(requireContext(), R.color.white)
             circularProgressBar.indeterminateMode = false
             circularProgressBar.progress = 0f
-            textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star,0)
+           // textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star,0)
         }
 
-        estimatedDistanceTxtView.setTextColor(color)
+       /* estimatedDistanceTxtView.setTextColor(color)
         estimatedTimeTextView.setTextColor(color)
         textRating.setTextColor(color)
-        //textType
-        ImageViewCompat.setImageTintList(imgPerson, ColorStateList.valueOf(color))
+        textType.setTextColor(color)
+        ImageViewCompat.setImageTintList(imgPerson, ColorStateList.valueOf(color))*/
     }
 }
