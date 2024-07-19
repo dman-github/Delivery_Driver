@@ -90,4 +90,26 @@ class JobRequestUsecase(
             }
         }
     }
+
+    fun updateJobRequest(location: Location, completion: (Result<JobInfoModel>) -> Unit) {
+        activeJobId?.let { jobId ->
+            // Driver is changed to the new driver
+            jobRequestService.updateJob(jobId,
+                AppLocation(location.latitude, location.longitude)) { result ->
+                result.fold(onSuccess = {
+                    jobRequestService.fetchCurrentJob(jobId) { result ->
+                        result.fold(onSuccess = {
+                            completion(Result.success(it))
+                        }, onFailure = {
+                            // Error occurred
+                            completion(Result.failure(it))
+                        })
+                    }
+                }, onFailure = {
+                    // Error occurred
+                    completion(Result.failure(it))
+                })
+            }
+        }
+    }
 }

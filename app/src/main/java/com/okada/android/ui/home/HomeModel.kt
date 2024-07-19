@@ -16,6 +16,6 @@ class HomeModel {
     var acceptJob: Boolean = false
 
     fun hasAcceptedJob(): Boolean  {
-        return currentJobClient != null && acceptJob
+        return curentJobInfo != null && acceptJob
     }
 }

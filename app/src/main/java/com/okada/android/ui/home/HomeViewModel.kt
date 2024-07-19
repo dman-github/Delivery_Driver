@@ -76,15 +76,27 @@ class HomeViewModel(
         location?.let { location ->
             val newPos = LatLng(location.latitude, location.longitude)
             _model.uid?.also { uid ->
-                locationUsecase.updateLocation(uid, location, context) { result ->
-                    result.onSuccess {
-                        _model.lastLocation = location
-                        _updateMap.value = newPos
-                        _showSnackbarMessage.value =
-                            "Location updated\nLat: ${location.latitude}, Lon: ${location.longitude}}"
+                // Here if we have accepted a job then the location is updated only in the Active job
+                if (_model.hasAcceptedJob()) {
+                    jobRequestUsecase.updateJobRequest(location) { result ->
+                        result.fold(onSuccess = {job->
+                            _model.curentJobInfo = job
+                        }, onFailure = {
+                            // Error occurred
+                            _showSnackbarMessage.value = "Cannot update job: " + it.message
+                        })
                     }
-                    result.onFailure {
-                        _showSnackbarMessage.value = it.message
+                } else {
+                    locationUsecase.updateLocation(uid, location, context) { result ->
+                        result.onSuccess {
+                            _model.lastLocation = location
+                            _updateMap.value = newPos
+                            _showSnackbarMessage.value =
+                                "Location updated\nLat: ${location.latitude}, Lon: ${location.longitude}}"
+                        }
+                        result.onFailure {
+                            _showSnackbarMessage.value = it.message
+                        }
                     }
                 }
             } ?: run {
