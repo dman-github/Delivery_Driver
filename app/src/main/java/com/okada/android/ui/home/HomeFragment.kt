@@ -5,10 +5,10 @@ import android.Manifest
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.animation.ValueAnimator
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Color
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,11 +16,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
-import androidx.core.widget.ImageViewCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -46,11 +47,8 @@ import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.gms.maps.model.SquareCap
 import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.mikhaellopez.circularprogressbar.CircularProgressBar
+import com.okada.android.Common
 import com.okada.android.R
 import com.okada.android.data.model.DriverRequestModel
 import com.okada.android.data.model.SelectedPlaceModel
@@ -86,6 +84,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var imgPhoneCall: ImageView
     private lateinit var btnStartTrip: CircularProgressButton
     private lateinit var circularProgressBar: CircularProgressBar
+    // Notify Client that driver has arrived
+    private lateinit var notifyClientLayout: LinearLayout
+    private lateinit var notifyClientTextView: TextView
+    private lateinit var notifyClientProgressBar: ProgressBar
 
     private var _binding: FragmentHomeBinding? = null
     private lateinit var mapFragment: SupportMapFragment
@@ -141,6 +143,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         startJobEstimatedDistanceTxtView = binding.textStartJobEstimatedDistance
         startJobEstimatedTimeTxtView = binding.txtStartJobEstimatedTime
         textType = binding.txtTypeDriver
+        notifyClientLayout = binding.notifyClientLayout
+        notifyClientTextView = binding.textNotifyClient
+        notifyClientProgressBar = binding.barNotifyClient
         declineView.setOnClickListener(this)
     }
 
@@ -179,6 +184,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             Observer { accepted ->
                 if (accepted) {
                     jobPlanAccepted()
+                }
+            })
+
+        homeViewModel.arrivedAtPickup.observe(viewLifecycleOwner,
+            Observer { arrived ->
+                if (arrived) {
+                    arrivedAtPickupLocation()
                 }
             })
 
@@ -535,5 +547,25 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         textRating.setTextColor(color)
         textType.setTextColor(color)
         ImageViewCompat.setImageTintList(imgPerson, ColorStateList.valueOf(color))*/
+    }
+
+    private fun arrivedAtPickupLocation() {
+        setLayoutProcess(false)
+        notifyClientLayout.visibility = View.VISIBLE
+        notifyClientProgressBar.max = Common.MAX_WAIT_TIME_IN_MINS * 60
+        val countDownTimer = object:CountDownTimer((notifyClientProgressBar.max * 1000).toLong(), 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                notifyClientProgressBar.progress += 1
+                val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished)
+                val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) -
+                        TimeUnit.MINUTES.toSeconds(minutes)
+                notifyClientTextView.text = String.format("%02d:%02d", minutes, seconds)
+            }
+
+            override fun onFinish() {
+                TODO("Not yet implemented")
+            }
+
+        }.start()
     }
 }

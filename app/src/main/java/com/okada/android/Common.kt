@@ -79,4 +79,7 @@ object Common {
     val PICKUP_LOCATION: String = "pickupLoc"
     val REQUEST_DRIVER_MSG_TITLE: String = "Driver requested!"
     val DECLINE_REQUEST_MSG_TITLE: String = "Request Cancelled!"
+    val DRIVER_ARRIVED_REQUEST_MSG_TITLE: String = "Driver has Arrived!"
+    val MIN_DISTANCE_TO_DESIRED_LOCATION: Int = 50
+    val MAX_WAIT_TIME_IN_MINS: Int = 1
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.maps.model.LatLng
+import com.okada.android.Common
 import com.okada.android.data.LocationUsecase
 import com.okada.android.data.AccountUsecase
 import com.okada.android.data.DirectionsUsecase
@@ -38,6 +39,9 @@ class HomeViewModel(
 
     private val _acceptedJob = MutableLiveData<Boolean>()
     val acceptedJob: LiveData<Boolean> = _acceptedJob
+
+    private val _arrivedAtPickup = MutableLiveData<Boolean>()
+    val arrivedAtPickup: LiveData<Boolean> = _arrivedAtPickup
 
 
     private val _updateMapWithPlace = MutableLiveData<SelectedPlaceModel>()
@@ -79,8 +83,17 @@ class HomeViewModel(
                 // Here if we have accepted a job then the location is updated only in the Active job
                 if (_model.hasAcceptedJob()) {
                     jobRequestUsecase.updateJobRequest(location) { result ->
-                        result.fold(onSuccess = {job->
+                        result.fold(onSuccess = { job ->
                             _model.curentJobInfo = job
+                            if (_model.arrivalNotificationSent) {
+                                compareDistanceToDest(
+                                    newPos,
+                                    LatLng(
+                                        job.jobDetails!!.pickupLocation!!.latitude!!,
+                                        job.jobDetails!!.pickupLocation!!.longitude!!
+                                    )
+                                )
+                            }
                         }, onFailure = {
                             // Error occurred
                             _showSnackbarMessage.value = "Cannot update job: " + it.message
@@ -104,6 +117,7 @@ class HomeViewModel(
             }
         }
     }
+
 
     fun removeUserLocation() {
         _model.uid?.also { uid ->
@@ -174,7 +188,7 @@ class HomeViewModel(
     fun retrieveActiveJob() {
         jobRequestUsecase.fetchJobRequest() { result ->
             result.fold(onSuccess = { jobRequestModel ->
-                profileUsecase.fetchClientInfo(jobRequestModel.clientUid!!) {result->
+                profileUsecase.fetchClientInfo(jobRequestModel.clientUid!!) { result ->
                     result.fold(onSuccess = { userInfoModel ->
                         _model.currentJobClient = userInfoModel
                         _model.curentJobInfo = jobRequestModel
@@ -186,23 +200,60 @@ class HomeViewModel(
                 }
             }, onFailure = {
                 // Error occurred
-                _showSnackbarMessage.value = "Job information not found"
+                _showSnackbarMessage.value = "Job information not found $it.message"
             })
         }
     }
 
     fun acceptActiveJob() {
-        _model.lastLocation?.let{loc->
+        _model.lastLocation?.let { loc ->
             _model.uid?.let { uid ->
                 jobRequestUsecase.acceptJobRequest(loc) { result ->
                     result.fold(onSuccess = {
                         _model.acceptJob = true
                         _acceptedJob.value = true
                         locationUsecase.removeLocationFor(uid)
+                        // Send a push notification to the client that the driver has arrived
+                        _model.curentJobInfo?.clientUid?.let { clientUid ->
+                            _model.uid?.let { driverUid ->
+                                jobRequestUsecase.sendDriverArrivedRequest(driverUid, clientUid) {result->
+                                    result.fold(onSuccess = {
+                                        _model.arrivalNotificationSent = true
+                                        _arrivedAtPickup.value = true
+                                    }, onFailure = {
+                                        // Error occurred
+                                        _showSnackbarMessage.value = "Cannot send arrival notification to client: $it.message"
+                                    })
+                                }
+                            }
+                        }
                     }, onFailure = {
                         // Error occurred
-                        _showSnackbarMessage.value = "Job information not found"
+                        _showSnackbarMessage.value = "Job information not found $it.message"
                     })
+                }
+            }
+        }
+    }
+
+    private fun compareDistanceToDest(newPos: LatLng,
+                                      destination: LatLng) {
+        var distance = FloatArray(3) //0 is distance, //1 is start bearing , //2 is end bearing
+        Location.distanceBetween(newPos.latitude, newPos.longitude,
+            destination.latitude, destination.longitude, distance)
+        if (distance[0] <= Common.MIN_DISTANCE_TO_DESIRED_LOCATION) {
+            // Send a push notification to the client that the driver has arrived
+            _model.curentJobInfo?.clientUid?.let { clientUid ->
+                _model.uid?.let { driverUid ->
+                    jobRequestUsecase.sendDriverArrivedRequest(driverUid, clientUid) {result->
+                        result.fold(onSuccess = {
+                            _model.arrivalNotificationSent = true
+                            _arrivedAtPickup.value = true
+                        }, onFailure = {
+                            // Error occurred
+                            _showSnackbarMessage.value = "Cannot send arrival notification to client: $it.message"
+                        })
+                    }
                 }
             }
         }

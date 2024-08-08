@@ -28,4 +28,27 @@ class DriverRequestServiceImpl : DriverRequestService {
                 completion(Result.failure(exp))
             }
     }
+
+    override fun sendDriverArrivalRequest(
+        pushToken: String,
+        uid: String,
+        completion: (Result<Unit>) -> Unit
+    ) {
+        val data = hashMapOf(
+            "token" to pushToken,
+            "title" to Common.DRIVER_ARRIVED_REQUEST_MSG_TITLE,
+            "body" to "Your driver has arrived",
+            "clientKey" to uid,
+            "pickupLoc" to ""
+        )
+        val functions = FirebaseFunctions.getInstance()
+        functions.getHttpsCallable(cloudFuncRequestDriverName)
+            .call(data)
+            .addOnSuccessListener {
+                completion(Result.success(Unit))
+            }
+            .addOnFailureListener { exp ->
+                completion(Result.failure(exp))
+            }
+    }
 }

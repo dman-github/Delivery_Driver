@@ -35,7 +35,9 @@ class HomeViewModelFactory : ViewModelProvider.Factory {
                     dataService = DataServiceImpl()
                 ),
                 jobRequestUsecase = JobRequestUsecase(
-                    jobRequestService = JobRequestServiceImpl()
+                    jobRequestService = JobRequestServiceImpl(),
+                    driverRequestService =  DriverRequestServiceImpl(),
+                    dataService =  DataServiceImpl()
                 )
             ) as T
         }
