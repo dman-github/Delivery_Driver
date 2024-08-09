@@ -2,6 +2,7 @@ package com.okada.android.ui.home
 
 import android.content.Context
 import android.location.Location
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -85,7 +86,7 @@ class HomeViewModel(
                     jobRequestUsecase.updateJobRequest(location) { result ->
                         result.fold(onSuccess = { job ->
                             _model.curentJobInfo = job
-                            if (_model.arrivalNotificationSent) {
+                            if (!_model.arrivalNotificationSent) {
                                 compareDistanceToDest(
                                     newPos,
                                     LatLng(
@@ -213,20 +214,6 @@ class HomeViewModel(
                         _model.acceptJob = true
                         _acceptedJob.value = true
                         locationUsecase.removeLocationFor(uid)
-                        // Send a push notification to the client that the driver has arrived
-                        _model.curentJobInfo?.clientUid?.let { clientUid ->
-                            _model.uid?.let { driverUid ->
-                                jobRequestUsecase.sendDriverArrivedRequest(driverUid, clientUid) {result->
-                                    result.fold(onSuccess = {
-                                        _model.arrivalNotificationSent = true
-                                        _arrivedAtPickup.value = true
-                                    }, onFailure = {
-                                        // Error occurred
-                                        _showSnackbarMessage.value = "Cannot send arrival notification to client: $it.message"
-                                    })
-                                }
-                            }
-                        }
                     }, onFailure = {
                         // Error occurred
                         _showSnackbarMessage.value = "Job information not found $it.message"
@@ -241,6 +228,7 @@ class HomeViewModel(
         var distance = FloatArray(3) //0 is distance, //1 is start bearing , //2 is end bearing
         Location.distanceBetween(newPos.latitude, newPos.longitude,
             destination.latitude, destination.longitude, distance)
+        Log.i("App_Info", "HomeViewModel compareDistanceToDest: Dis is ${distance[0]}")
         if (distance[0] <= Common.MIN_DISTANCE_TO_DESIRED_LOCATION) {
             // Send a push notification to the client that the driver has arrived
             _model.curentJobInfo?.clientUid?.let { clientUid ->
