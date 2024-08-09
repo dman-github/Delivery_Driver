@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import com.okada.android.BuildConfig
 import com.okada.android.R
 import com.okada.android.databinding.FragmentSplashBinding
 
@@ -39,6 +40,8 @@ class SplashFragment : Fragment() {
             .get(SplashViewModel::class.java)
 
         val loadingProgressBar = binding.loading
+        var appVersion = binding.version
+        appVersion.setText("${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
         Log.i("App_Info", "SplashFragment onViewCreated")
         splashViewModel.liveDataMerger.observe(viewLifecycleOwner,
             Observer { signupResult ->
