@@ -41,6 +41,9 @@ class HomeViewModel(
     private val _acceptedJob = MutableLiveData<Boolean>()
     val acceptedJob: LiveData<Boolean> = _acceptedJob
 
+    private val _declinedJob = MutableLiveData<Boolean>()
+    val declinedJob: LiveData<Boolean> = _declinedJob
+
     private val _arrivedAtPickup = MutableLiveData<Boolean>()
     val arrivedAtPickup: LiveData<Boolean> = _arrivedAtPickup
 
@@ -166,6 +169,7 @@ class HomeViewModel(
                 result.fold(onSuccess = {
                     // Push done
                     _showSnackbarMessage.value = "active request declined"
+                    _declinedJob.value = true
                 }, onFailure = {
                     // Error occurred
                     _showSnackbarMessage.value = it.message

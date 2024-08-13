@@ -70,7 +70,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
     private lateinit var homeViewModel: HomeViewModel
     private lateinit var mMap: GoogleMap
-    private lateinit var declineView: Chip
+    private lateinit var acceptView: Chip
     private lateinit var jobPreviewView: CardView
     private lateinit var jobAcceptView: CardView
     private lateinit var estimatedDistanceTxtView: TextView
@@ -130,7 +130,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     }
 
     private fun initViews() {
-        declineView = binding.chipDecline
+        acceptView = binding.chipAccept
         jobAcceptView = binding.layoutStartJob
         jobPreviewView = binding.layoutAccept
         estimatedDistanceTxtView = binding.textEstimatedDistance
@@ -146,7 +146,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         notifyClientLayout = binding.notifyClientLayout
         notifyClientTextView = binding.textNotifyClient
         notifyClientProgressBar = binding.barNotifyClient
-        declineView.setOnClickListener(this)
+        acceptView.setOnClickListener(this)
     }
 
     private fun init() {
@@ -184,6 +184,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             Observer { accepted ->
                 if (accepted) {
                     jobPlanAccepted()
+                }
+            })
+
+        homeViewModel.declinedJob.observe(viewLifecycleOwner,
+            Observer { accepted ->
+                if (accepted) {
+                    jobPlanDeclined()
                 }
             })
 
@@ -470,7 +477,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         val latLngBound = LatLngBounds.Builder().include(model.eventOrigin!!)
             .include(model.eventDest!!)
             .build()
-        //Add icon for origin
+        //Add icon for pickup location
         model.eventDest?.let { dest ->
             mMap.addMarker(
                 MarkerOptions().position(dest)
@@ -488,7 +495,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         mMap.moveCamera(CameraUpdateFactory.zoomTo(mMap.cameraPosition!!.zoom - 1))
 
         //Set layout visibility
-        declineView.visibility = View.VISIBLE
+        acceptView.visibility = View.VISIBLE
         jobAcceptView.visibility = View.INVISIBLE
         jobPreviewView.visibility = View.VISIBLE
         //Countdown timer animation
@@ -499,34 +506,48 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             }
             .takeUntil { aLong -> aLong == "100".toLong() }
             .doOnComplete {
-                createJobPlan(model.boundedTime!!, model.distance!!)
+                declineActiveJob(model.boundedTime!!, model.distance!!)
             }.subscribe()
     }
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.chip_decline -> {
+            R.id.chip_accept -> {
                 if (homeViewModel.hasJob()) {
-                    declineView.visibility = View.GONE
+                    acceptView.visibility = View.GONE
                     jobPreviewView.visibility = View.GONE
                     requestObservable?.dispose()
                     circularProgressBar.progress = 0f
-                    homeViewModel.declineActiveJob()
+                    homeViewModel.acceptActiveJob()
                 }
             }
         }
     }
 
 
-    private fun createJobPlan(duration: String, distance: String) {
+    private fun declineActiveJob(duration: String, distance: String) {
         setLayoutProcess(true)
-        homeViewModel.acceptActiveJob()
+        homeViewModel.declineActiveJob()
     }
 
     private fun jobPlanAccepted() {
         setLayoutProcess(false)
         jobAcceptView.visibility = View.VISIBLE
         jobPreviewView.visibility = View.INVISIBLE
+    }
+
+    private fun jobPlanDeclined() {
+        setLayoutProcess(false)
+        jobAcceptView.visibility = View.INVISIBLE
+        acceptView.visibility = View.INVISIBLE
+        jobPreviewView.visibility = View.INVISIBLE
+        stopAnimation()
+        mMap.clear()
+    }
+
+    private fun stopAnimation() {
+        valueAnimator.end()
+        valueAnimator.cancel()
     }
 
     private fun setLayoutProcess(show: Boolean) {
