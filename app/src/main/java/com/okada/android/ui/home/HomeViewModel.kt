@@ -131,33 +131,42 @@ class HomeViewModel(
         }
     }
 
-    fun calculatePath(driverLocation: Location) {
+    fun calculatePath(driverLocation: Location, forPickup: Boolean) {
         _model.curentJobInfo?.jobDetails?.pickupLocation?.let { pickupLocation ->
-            val requestedLocationStr = StringBuilder().append(pickupLocation.latitude).append(",")
-                .append(pickupLocation.longitude).toString()
-            val driverLocationStr = StringBuilder().append(driverLocation.latitude).append(",")
-                .append(driverLocation.longitude).toString()
-            //fetch directions between the 2 points from the Google directions api
-            directionsUsecase.getDirections(
-                driverLocationStr,
-                requestedLocationStr,
-                _model.apiKey
-            ) { result ->
-                result.onSuccess { placeModel ->
-                    try {
-                        placeModel.eventOrigin =
-                            LatLng(driverLocation.latitude, driverLocation.longitude)
-                        placeModel.eventDest = LatLng(
-                            requestedLocationStr.split(",")[0].toDouble(),
-                            requestedLocationStr.split(",")[1].toDouble()
-                        )
-                        _updateMapWithPlace.value = placeModel
-                    } catch (e: Exception) {
-                        _showSnackbarMessage.value = e.message
+            _model.curentJobInfo?.jobDetails?.deliveryLocation?.let { deliveryLocation ->
+                val pickupAddress = _model.curentJobInfo?.jobDetails?.pickupAddress ?: ""
+                val deliveryAddress = _model.curentJobInfo?.jobDetails?.deliverAddress ?: ""
+                var addressStr= if (forPickup) pickupAddress else deliveryAddress
+                var endLocation = if (forPickup) pickupLocation else deliveryLocation
+                val requestedLocationStr =
+                    StringBuilder().append(endLocation.latitude).append(",")
+                        .append(endLocation.longitude).toString()
+                val driverLocationStr = StringBuilder().append(driverLocation.latitude).append(",")
+                    .append(driverLocation.longitude).toString()
+                //fetch directions between the 2 points from the Google directions api
+                directionsUsecase.getDirections(
+                    driverLocationStr,
+                    requestedLocationStr,
+                    _model.apiKey
+                ) { result ->
+                    result.onSuccess { placeModel ->
+                        try {
+                            placeModel.eventOrigin =
+                                LatLng(driverLocation.latitude, driverLocation.longitude)
+                            placeModel.eventDest = LatLng(
+                                requestedLocationStr.split(",")[0].toDouble(),
+                                requestedLocationStr.split(",")[1].toDouble()
+                            )
+                            placeModel.forPickup = forPickup
+                            placeModel.endAddress = addressStr
+                            _updateMapWithPlace.value = placeModel
+                        } catch (e: Exception) {
+                            _showSnackbarMessage.value = e.message
+                        }
                     }
-                }
-                result.onFailure {
-                    _showSnackbarMessage.value = it.message
+                    result.onFailure {
+                        _showSnackbarMessage.value = it.message
+                    }
                 }
             }
         }

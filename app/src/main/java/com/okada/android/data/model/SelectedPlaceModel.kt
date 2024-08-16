@@ -7,9 +7,11 @@ class SelectedPlaceModel(
     var boundedTime: String? = null,
     var startAddress: String? = null,
     var endAddress: String? = null,
+    var endAddressStr: String? = null,
     var distance: String? = null,
     var eventOrigin: LatLng? = null,
-    var eventDest: LatLng? = null
+    var eventDest: LatLng? = null,
+    var forPickup: Boolean? = null
 ) {
 
 }

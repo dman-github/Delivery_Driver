@@ -82,12 +82,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var startJobEstimatedTimeTxtView: TextView
     private lateinit var imgPerson: ImageView
     private lateinit var imgPhoneCall: ImageView
-    private lateinit var btnStartTrip: CircularProgressButton
     private lateinit var circularProgressBar: CircularProgressBar
     // Notify Client that driver has arrived
     private lateinit var notifyClientLayout: LinearLayout
     private lateinit var notifyClientTextView: TextView
     private lateinit var notifyClientProgressBar: ProgressBar
+    private lateinit var btnStartTrip: CircularProgressButton
+    private lateinit var btnCompleteTrip: CircularProgressButton
 
     private var _binding: FragmentHomeBinding? = null
     private lateinit var mapFragment: SupportMapFragment
@@ -97,6 +98,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private var driverRequestModel: DriverRequestModel? = null
     private lateinit var valueAnimator: ValueAnimator
     private var requestObservable: Disposable? = null
+    private var driverWaitingTimer: CountDownTimer? = null
 
     private var isTripStart = false
     private var onlineSystemAlreadyRegistered = false
@@ -140,6 +142,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         imgPerson = binding.imgPerson
         imgPhoneCall = binding.imgPhoneCall
         btnStartTrip = binding.startButton
+        btnCompleteTrip = binding.completeTripButton
         startJobEstimatedDistanceTxtView = binding.textStartJobEstimatedDistance
         startJobEstimatedTimeTxtView = binding.txtStartJobEstimatedTime
         textType = binding.txtTypeDriver
@@ -147,6 +150,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         notifyClientTextView = binding.textNotifyClient
         notifyClientProgressBar = binding.barNotifyClient
         acceptView.setOnClickListener(this)
+        btnStartTrip.setOnClickListener(this)
+        btnCompleteTrip.setOnClickListener(this)
     }
 
     private fun init() {
@@ -176,7 +181,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         homeViewModel.activeJobRxd.observe(viewLifecycleOwner,
             Observer { ifRxd ->
                 if (ifRxd) {
-                    jobRequestShowPath()
+                    jobRequestShowPathToPickup()
                 }
             })
 
@@ -404,7 +409,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         }
     }
 
-    fun jobRequestShowPath() {
+    fun jobRequestShowPathToPickup() {
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
                 ACCESS_FINE_LOCATION
@@ -418,7 +423,26 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                         "Error: $e", Toast.LENGTH_SHORT
                     ).show();
                 }.addOnSuccessListener { lastLocation ->
-                   homeViewModel.calculatePath(lastLocation)
+                   homeViewModel.calculatePath(lastLocation, true)
+                }
+        }
+    }
+
+    fun jobRequestShowPathToDestination() {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            fusedLocationProviderClient
+                .lastLocation
+                .addOnFailureListener { e ->
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: $e", Toast.LENGTH_SHORT
+                    ).show();
+                }.addOnSuccessListener { lastLocation ->
+                    homeViewModel.calculatePath(lastLocation, false)
                 }
         }
     }
@@ -460,28 +484,37 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         }
 
         //Animation
-        valueAnimator = ValueAnimator.ofInt(0, 100)
-        valueAnimator.duration = 1100
-        valueAnimator.repeatCount = ValueAnimator.INFINITE
-        valueAnimator.interpolator = LinearInterpolator()
-        valueAnimator.addUpdateListener { value ->
-            val points = greyPolyLine!!.points
-            val percentValue = value.animatedValue.toString().toInt()
-            val size = points.size
-            val newPoints = (size * (percentValue / 100.0f)).toInt()
-            val p = points.subList(0, newPoints)
-            blackPolyLine!!.points = p
+        if (model.forPickup!!) {
+            valueAnimator = ValueAnimator.ofInt(0, 100)
+            valueAnimator.duration = 1100
+            valueAnimator.repeatCount = ValueAnimator.INFINITE
+            valueAnimator.interpolator = LinearInterpolator()
+            valueAnimator.addUpdateListener { value ->
+                val points = greyPolyLine!!.points
+                val percentValue = value.animatedValue.toString().toInt()
+                val size = points.size
+                val newPoints = (size * (percentValue / 100.0f)).toInt()
+                val p = points.subList(0, newPoints)
+                blackPolyLine!!.points = p
+            }
+            valueAnimator.start()
         }
-        valueAnimator.start()
 
         val latLngBound = LatLngBounds.Builder().include(model.eventOrigin!!)
             .include(model.eventDest!!)
             .build()
-        //Add icon for pickup location
+        //Add icon for pickup location or destination
         model.eventDest?.let { dest ->
             mMap.addMarker(
-                MarkerOptions().position(dest)
-                    .icon(BitmapDescriptorFactory.defaultMarker()).title("Pickup Location")
+                if (model.forPickup!!) {
+                    MarkerOptions().position(dest)
+                        .icon(BitmapDescriptorFactory.defaultMarker())
+                        .title("Pickup Location")
+                } else {
+                    MarkerOptions().position(dest)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
+                        .title(model.endAddressStr)
+                }
             )
         }
         // Populate views
@@ -508,20 +541,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             .doOnComplete {
                 declineActiveJob(model.boundedTime!!, model.distance!!)
             }.subscribe()
-    }
-
-    override fun onClick(v: View?) {
-        when (v?.id) {
-            R.id.chip_accept -> {
-                if (homeViewModel.hasJob()) {
-                    acceptView.visibility = View.GONE
-                    jobPreviewView.visibility = View.GONE
-                    requestObservable?.dispose()
-                    circularProgressBar.progress = 0f
-                    homeViewModel.acceptActiveJob()
-                }
-            }
-        }
     }
 
 
@@ -573,8 +592,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private fun arrivedAtPickupLocation() {
         setLayoutProcess(false)
         notifyClientLayout.visibility = View.VISIBLE
+        btnStartTrip.isEnabled = true
         notifyClientProgressBar.max = Common.MAX_WAIT_TIME_IN_MINS * 60
-        val countDownTimer = object:CountDownTimer((notifyClientProgressBar.max * 1000).toLong(), 1000) {
+        driverWaitingTimer = object:CountDownTimer((notifyClientProgressBar.max * 1000).toLong(), 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 notifyClientProgressBar.progress += 1
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished)
@@ -589,4 +609,40 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
         }.start()
     }
+
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.chip_accept -> {
+                if (homeViewModel.hasJob()) {
+                    acceptView.visibility = View.GONE
+                    jobPreviewView.visibility = View.GONE
+                    requestObservable?.dispose()
+                    circularProgressBar.progress = 0f
+                    homeViewModel.acceptActiveJob()
+                }
+            }
+            R.id.startButton -> {
+                if (homeViewModel.hasJob()) {
+                    stopAnimation()
+                    mMap.clear()
+                    driverWaitingTimer?.cancel()
+                    notifyClientLayout.visibility = View.GONE
+                    acceptView.visibility = View.GONE
+                    btnStartTrip.visibility = View.GONE
+                    btnCompleteTrip.visibility = View.VISIBLE
+                    jobRequestShowPathToDestination()
+                }
+            }
+            R.id.completeTripButton -> {
+                if (homeViewModel.hasJob()) {
+                    acceptView.visibility = View.GONE
+                    jobPreviewView.visibility = View.GONE
+                    requestObservable?.dispose()
+                    circularProgressBar.progress = 0f
+                    homeViewModel.acceptActiveJob()
+                }
+            }
+        }
+    }
+
 }

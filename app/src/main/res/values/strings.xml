@@ -67,5 +67,6 @@
     <string name="decline">Decline</string>
     <string name="Accept">Accept</string>
     <string name="startJob">Start Job</string>
+    <string name="completeTrip">Complete Trip</string>
 
 </resources>

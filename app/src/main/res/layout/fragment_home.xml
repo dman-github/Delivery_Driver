@@ -264,19 +264,41 @@
 
             </RelativeLayout>
 
-            <com.github.leandroborgesferreira.loadingbutton.customViews.CircularProgressButton
-                android:id="@+id/startButton"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/curved_rectangle_all_sides"
-                android:enabled="false"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
-                android:text="@string/startJob"
-                app:spinning_bar_color="@color/white"
-                app:spinning_bar_padding="6dp"
-                app:spinning_bar_width="4dp" />
+                android:layout_height="wrap_content">
+                <com.github.leandroborgesferreira.loadingbutton.customViews.CircularProgressButton
+                    android:id="@+id/startButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/curved_rectangle_all_sides"
+                    android:enabled="false"
+                    android:paddingLeft="10dp"
+                    android:visibility="visible"
+                    android:paddingRight="10dp"
+                    android:text="@string/startJob"
+                    app:spinning_bar_color="@color/white"
+                    app:spinning_bar_padding="6dp"
+                    app:spinning_bar_width="4dp" />
+
+                <com.github.leandroborgesferreira.loadingbutton.customViews.CircularProgressButton
+                    android:id="@+id/completeTripButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/curved_rectangle_all_sides"
+                    android:enabled="false"
+                    android:paddingLeft="10dp"
+                    android:visibility="gone"
+                    android:paddingRight="10dp"
+                    android:text="@string/completeTrip"
+                    app:spinning_bar_color="@color/white"
+                    app:spinning_bar_padding="6dp"
+                    app:spinning_bar_width="4dp" />
+
+            </FrameLayout>
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </FrameLayout>

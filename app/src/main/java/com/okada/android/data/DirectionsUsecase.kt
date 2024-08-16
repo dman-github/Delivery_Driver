@@ -34,7 +34,7 @@ class DirectionsUsecase() {
             )
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { returnResult ->
+                .subscribe({ returnResult ->
                     returnResult?.let { result ->
                         try {
                             var placeModel = SelectedPlaceModel()
@@ -42,6 +42,7 @@ class DirectionsUsecase() {
                             val errorString = jsonObject.getString("status")
                             if (errorString.isNotEmpty() && errorString.lowercase() != "ok") {
                                 completion(Result.failure(Exception("Directions api: $errorString")))
+                                return@subscribe
                             }
                             val jsonArray = jsonObject.getJSONArray("routes")
                             for (i in 0 until jsonArray.length()) {
@@ -54,8 +55,8 @@ class DirectionsUsecase() {
                             val legs = objects.getJSONArray("legs")
                             val legsObject = legs.getJSONObject(0)
 
-                            val time = legsObject.getJSONObject(("duration"))
-                            val distance = legsObject.getJSONObject(("distance")).getString("text")
+                            val time = legsObject.getJSONObject("duration")
+                            val distance = legsObject.getJSONObject("distance").getString("text")
                             val duration = time.getString("text")
                             placeModel.boundedTime = duration
                             placeModel.distance = distance
@@ -68,7 +69,10 @@ class DirectionsUsecase() {
                     } ?: run {
                         completion(Result.failure(Exception("Did not get any direction information")))
                     }
-                }
+                }, { error ->
+                    // Error handling block
+                    completion(Result.failure(error))
+                })
         )
     }
 
