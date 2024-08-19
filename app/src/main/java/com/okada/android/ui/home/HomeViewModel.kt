@@ -41,12 +41,15 @@ class HomeViewModel(
     private val _acceptedJob = MutableLiveData<Boolean>()
     val acceptedJob: LiveData<Boolean> = _acceptedJob
 
+
     private val _declinedJob = MutableLiveData<Boolean>()
     val declinedJob: LiveData<Boolean> = _declinedJob
 
     private val _arrivedAtPickup = MutableLiveData<Boolean>()
     val arrivedAtPickup: LiveData<Boolean> = _arrivedAtPickup
 
+    private val _arrivedAtDropOff = MutableLiveData<Boolean>()
+    val arrivedAtDropOff: LiveData<Boolean> = _arrivedAtDropOff
 
     private val _updateMapWithPlace = MutableLiveData<SelectedPlaceModel>()
     val updateMapWithPlace: LiveData<SelectedPlaceModel> = _updateMapWithPlace
@@ -86,10 +89,13 @@ class HomeViewModel(
             _model.uid?.also { uid ->
                 // Here if we have accepted a job then the location is updated only in the Active job
                 if (_model.hasAcceptedJob()) {
+                    _model.lastLocation = location
                     jobRequestUsecase.updateJobRequest(location) { result ->
                         result.fold(onSuccess = { job ->
                             _model.curentJobInfo = job
                             if (!_model.arrivalNotificationSent) {
+                                // Driver is travelling to the pickup location
+                                // Pickup location is the destination
                                 compareDistanceToDest(
                                     newPos,
                                     LatLng(
@@ -97,6 +103,18 @@ class HomeViewModel(
                                         job.jobDetails!!.pickupLocation!!.longitude!!
                                     )
                                 )
+                            } else {
+                                if (_model.jobStarted) {
+                                    // Driver is travelling to the delivery location
+                                    // Pickup location is the delivery location
+                                    compareDistanceToDest(
+                                        newPos,
+                                        LatLng(
+                                            job.jobDetails!!.deliveryLocation!!.latitude!!,
+                                            job.jobDetails!!.deliveryLocation!!.longitude!!
+                                        )
+                                    )
+                                }
                             }
                         }, onFailure = {
                             // Error occurred
@@ -136,7 +154,7 @@ class HomeViewModel(
             _model.curentJobInfo?.jobDetails?.deliveryLocation?.let { deliveryLocation ->
                 val pickupAddress = _model.curentJobInfo?.jobDetails?.pickupAddress ?: ""
                 val deliveryAddress = _model.curentJobInfo?.jobDetails?.deliverAddress ?: ""
-                var addressStr= if (forPickup) pickupAddress else deliveryAddress
+                var addressStr = if (forPickup) pickupAddress else deliveryAddress
                 var endLocation = if (forPickup) pickupLocation else deliveryLocation
                 val requestedLocationStr =
                     StringBuilder().append(endLocation.latitude).append(",")
@@ -144,6 +162,7 @@ class HomeViewModel(
                 val driverLocationStr = StringBuilder().append(driverLocation.latitude).append(",")
                     .append(driverLocation.longitude).toString()
                 //fetch directions between the 2 points from the Google directions api
+                Log.i("App_Info", "HomeViewModel calculate path getting directions")
                 directionsUsecase.getDirections(
                     driverLocationStr,
                     requestedLocationStr,
@@ -159,6 +178,10 @@ class HomeViewModel(
                             )
                             placeModel.forPickup = forPickup
                             placeModel.endAddress = addressStr
+                            Log.i(
+                                "App_Info",
+                                "HomeViewModel calculate path getting directions SUCCESS"
+                            )
                             _updateMapWithPlace.value = placeModel
                         } catch (e: Exception) {
                             _showSnackbarMessage.value = e.message
@@ -223,7 +246,9 @@ class HomeViewModel(
         _model.lastLocation?.let { loc ->
             _model.uid?.let { uid ->
                 jobRequestUsecase.acceptJobRequest(loc) { result ->
-                    result.fold(onSuccess = {
+                    result.fold(onSuccess = { job ->
+                        Log.i("App_Info", "Job plan accepted -> Remove location")
+                        _model.curentJobInfo = job
                         _model.acceptJob = true
                         _acceptedJob.value = true
                         locationUsecase.removeLocationFor(uid)
@@ -236,24 +261,62 @@ class HomeViewModel(
         }
     }
 
-    private fun compareDistanceToDest(newPos: LatLng,
-                                      destination: LatLng) {
+    fun startActiveJob() {
+        _model.jobStarted = true
+        /*_model.lastLocation?.let { loc ->
+            _model.uid?.let { uid ->
+                jobRequestUsecase.acceptJobRequest(loc) { result ->
+                    result.fold(onSuccess = { job ->
+                        Log.i("App_Info", "Job plan accepted -> Remove location")
+                        _model.curentJobInfo = job
+                        _model.acceptJob = true
+                        _acceptedJob.value = true
+                        locationUsecase.removeLocationFor(uid)
+                    }, onFailure = {
+                        // Error occurred
+                        _showSnackbarMessage.value = "Job information not found $it.message"
+                    })
+                }
+            }
+        }*/
+    }
+
+    private fun compareDistanceToDest(
+        newPos: LatLng,
+        destination: LatLng
+    ) {
         var distance = FloatArray(3) //0 is distance, //1 is start bearing , //2 is end bearing
-        Location.distanceBetween(newPos.latitude, newPos.longitude,
-            destination.latitude, destination.longitude, distance)
+        Location.distanceBetween(
+            newPos.latitude, newPos.longitude,
+            destination.latitude, destination.longitude, distance
+        )
         Log.i("App_Info", "HomeViewModel compareDistanceToDest: Dis is ${distance[0]}")
         if (distance[0] <= Common.MIN_DISTANCE_TO_DESIRED_LOCATION) {
             // Send a push notification to the client that the driver has arrived
             _model.curentJobInfo?.clientUid?.let { clientUid ->
                 _model.uid?.let { driverUid ->
-                    jobRequestUsecase.sendDriverArrivedRequest(driverUid, clientUid) {result->
-                        result.fold(onSuccess = {
-                            _model.arrivalNotificationSent = true
-                            _arrivedAtPickup.value = true
-                        }, onFailure = {
-                            // Error occurred
-                            _showSnackbarMessage.value = "Cannot send arrival notification to client: $it.message"
-                        })
+                    if (!_model.jobStarted) {
+                        Log.i("App_Info", "HomeViewModel sending driver arrived push notification")
+                        jobRequestUsecase.sendDriverArrivedRequest(driverUid, clientUid) { result ->
+                            result.fold(onSuccess = {
+                                Log.i(
+                                    "App_Info",
+                                    "HomeViewModel sending driver arrived push notification SUCCESS"
+                                )
+                                _model.arrivalNotificationSent = true
+                                _arrivedAtPickup.value = true
+                            }, onFailure = {
+                                // Error occurred
+                                _showSnackbarMessage.value =
+                                    "Cannot send arrival notification to client: $it.message"
+                            })
+                        }
+                    } else {
+                        Log.i(
+                            "App_Info",
+                            "HomeViewModel driver arrived at destination"
+                        )
+                        _arrivedAtDropOff.value = true
                     }
                 }
             }

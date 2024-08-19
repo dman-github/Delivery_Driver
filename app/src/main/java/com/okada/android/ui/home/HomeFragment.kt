@@ -206,6 +206,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 }
             })
 
+        homeViewModel.arrivedAtDropOff.observe(viewLifecycleOwner,
+            Observer { arrived ->
+                if (arrived) {
+                    arrivedAtDropOffLocation()
+                }
+            })
+
         // The google map builder
         locationRequest = LocationRequest.Builder(10000)
             .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
@@ -401,6 +408,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onDriverRequest(jobId: String) {
+        Log.i("App_Info", "Job Push notification received")
         if (homeViewModel.hasJob()) {
             homeViewModel.declineOtherJob(jobId)
         } else {
@@ -504,18 +512,24 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             .include(model.eventDest!!)
             .build()
         //Add icon for pickup location or destination
-        model.eventDest?.let { dest ->
-            mMap.addMarker(
-                if (model.forPickup!!) {
-                    MarkerOptions().position(dest)
-                        .icon(BitmapDescriptorFactory.defaultMarker())
-                        .title("Pickup Location")
-                } else {
-                    MarkerOptions().position(dest)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
-                        .title(model.endAddressStr)
-                }
-            )
+        model.eventOrigin?.let { origin ->
+            model.eventDest?.let { dest ->
+                mMap.addMarker(
+                    if (model.forPickup!!) {
+                        MarkerOptions().position(dest)
+                            .icon(BitmapDescriptorFactory.defaultMarker())
+                            .title("Pickup Location")
+                    } else {
+                        MarkerOptions().position(dest)
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
+                            .title(model.endAddressStr)
+
+                        MarkerOptions().position(origin)
+                            .icon(BitmapDescriptorFactory.defaultMarker())
+                            .title("Pickup Location")
+                    }
+                )
+            }
         }
         // Populate views
         estimatedTimeTextView.text = model.boundedTime
@@ -527,20 +541,23 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         mMap.moveCamera(cameraUpdate)
         mMap.moveCamera(CameraUpdateFactory.zoomTo(mMap.cameraPosition!!.zoom - 1))
 
-        //Set layout visibility
-        acceptView.visibility = View.VISIBLE
-        jobAcceptView.visibility = View.INVISIBLE
-        jobPreviewView.visibility = View.VISIBLE
-        //Countdown timer animation
-        requestObservable = Observable.interval(100, TimeUnit.MILLISECONDS)
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnNext { x ->
-                circularProgressBar.progress += 1f
-            }
-            .takeUntil { aLong -> aLong == "100".toLong() }
-            .doOnComplete {
-                declineActiveJob(model.boundedTime!!, model.distance!!)
-            }.subscribe()
+        //Set layout visibility logic
+        if (model.forPickup!!) {
+            acceptView.visibility = View.VISIBLE
+            jobAcceptView.visibility = View.INVISIBLE
+            jobPreviewView.visibility = View.VISIBLE
+
+            //Countdown timer animation
+            requestObservable = Observable.interval(100, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext { x ->
+                    circularProgressBar.progress += 1f
+                }
+                .takeUntil { aLong -> aLong == "100".toLong() }
+                .doOnComplete {
+                    declineActiveJob(model.boundedTime!!, model.distance!!)
+                }.subscribe()
+        }
     }
 
 
@@ -610,6 +627,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         }.start()
     }
 
+    private fun arrivedAtDropOffLocation() {
+        btnCompleteTrip.isEnabled = true
+    }
+
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.chip_accept -> {
@@ -618,6 +639,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                     jobPreviewView.visibility = View.GONE
                     requestObservable?.dispose()
                     circularProgressBar.progress = 0f
+                    Log.i("App_Info", "Job plan accepted")
                     homeViewModel.acceptActiveJob()
                 }
             }
@@ -626,20 +648,25 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                     stopAnimation()
                     mMap.clear()
                     driverWaitingTimer?.cancel()
-                    notifyClientLayout.visibility = View.GONE
                     acceptView.visibility = View.GONE
                     btnStartTrip.visibility = View.GONE
+                    notifyClientLayout.visibility = View.GONE
                     btnCompleteTrip.visibility = View.VISIBLE
+                    btnCompleteTrip.isEnabled = false
+                    Log.i("App_Info", "HomeFragment start button pressed")
                     jobRequestShowPathToDestination()
+                    homeViewModel.startActiveJob()
                 }
             }
             R.id.completeTripButton -> {
                 if (homeViewModel.hasJob()) {
-                    acceptView.visibility = View.GONE
-                    jobPreviewView.visibility = View.GONE
-                    requestObservable?.dispose()
-                    circularProgressBar.progress = 0f
-                    homeViewModel.acceptActiveJob()
+                    jobAcceptView.visibility = View.INVISIBLE
+                    stopAnimation()
+                    mMap.clear()
+                    Toast.makeText(
+                        requireContext(),
+                        "Job completed!!!!!", Toast.LENGTH_SHORT
+                    ).show();
                 }
             }
         }
