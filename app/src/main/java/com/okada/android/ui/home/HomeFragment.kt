@@ -621,7 +621,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             }
 
             override fun onFinish() {
-                TODO("Not yet implemented")
+                doStartButtonAction()
             }
 
         }.start()
@@ -644,19 +644,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 }
             }
             R.id.startButton -> {
-                if (homeViewModel.hasJob()) {
-                    stopAnimation()
-                    mMap.clear()
-                    driverWaitingTimer?.cancel()
-                    acceptView.visibility = View.GONE
-                    btnStartTrip.visibility = View.GONE
-                    notifyClientLayout.visibility = View.GONE
-                    btnCompleteTrip.visibility = View.VISIBLE
-                    btnCompleteTrip.isEnabled = false
-                    Log.i("App_Info", "HomeFragment start button pressed")
-                    jobRequestShowPathToDestination()
-                    homeViewModel.startActiveJob()
-                }
+                doStartButtonAction()
             }
             R.id.completeTripButton -> {
                 if (homeViewModel.hasJob()) {
@@ -669,6 +657,22 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                     ).show();
                 }
             }
+        }
+    }
+
+    fun doStartButtonAction() {
+        if (homeViewModel.hasJob()) {
+            stopAnimation()
+            mMap.clear()
+            driverWaitingTimer?.cancel()
+            acceptView.visibility = View.GONE
+            btnStartTrip.visibility = View.GONE
+            notifyClientLayout.visibility = View.GONE
+            btnCompleteTrip.visibility = View.VISIBLE
+            btnCompleteTrip.isEnabled = false
+            Log.i("App_Info", "HomeFragment start button pressed")
+            jobRequestShowPathToDestination()
+            homeViewModel.startActiveJob()
         }
     }
 
