@@ -75,6 +75,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var jobAcceptView: CardView
     private lateinit var estimatedDistanceTxtView: TextView
     private lateinit var estimatedTimeTextView: TextView
+
     //Accept Job Layout
     private lateinit var textRating: TextView
     private lateinit var textType: TextView
@@ -83,6 +84,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private lateinit var imgPerson: ImageView
     private lateinit var imgPhoneCall: ImageView
     private lateinit var circularProgressBar: CircularProgressBar
+
     // Notify Client that driver has arrived
     private lateinit var notifyClientLayout: LinearLayout
     private lateinit var notifyClientTextView: TextView
@@ -431,7 +433,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                         "Error: $e", Toast.LENGTH_SHORT
                     ).show();
                 }.addOnSuccessListener { lastLocation ->
-                   homeViewModel.calculatePath(lastLocation, true)
+                    homeViewModel.calculatePath(lastLocation, true)
                 }
         }
     }
@@ -514,21 +516,25 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         //Add icon for pickup location or destination
         model.eventOrigin?.let { origin ->
             model.eventDest?.let { dest ->
-                mMap.addMarker(
-                    if (model.forPickup!!) {
+                if (model.forPickup!!) {
+                    mMap.addMarker(
                         MarkerOptions().position(dest)
                             .icon(BitmapDescriptorFactory.defaultMarker())
                             .title("Pickup Location")
-                    } else {
+                    )
+                } else {
+                    mMap.addMarker(
                         MarkerOptions().position(dest)
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
-                            .title(model.endAddressStr)
+                            .title(model.endAddress)
+                    )
 
+                    mMap.addMarker(
                         MarkerOptions().position(origin)
                             .icon(BitmapDescriptorFactory.defaultMarker())
                             .title("Pickup Location")
-                    }
-                )
+                    )
+                }
             }
         }
         // Populate views
@@ -589,21 +595,21 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     private fun setLayoutProcess(show: Boolean) {
         var color = -1
         if (show) {
-           // color = ContextCompat.getColor(requireContext(), R.color.app_red_dark)
+            // color = ContextCompat.getColor(requireContext(), R.color.app_red_dark)
             circularProgressBar.indeterminateMode = true
-           // textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star_dark_gray,0)
+            // textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star_dark_gray,0)
         } else {
-           // color = ContextCompat.getColor(requireContext(), R.color.white)
+            // color = ContextCompat.getColor(requireContext(), R.color.white)
             circularProgressBar.indeterminateMode = false
             circularProgressBar.progress = 0f
-           // textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star,0)
+            // textRating.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.rating_star,0)
         }
 
-       /* estimatedDistanceTxtView.setTextColor(color)
-        estimatedTimeTextView.setTextColor(color)
-        textRating.setTextColor(color)
-        textType.setTextColor(color)
-        ImageViewCompat.setImageTintList(imgPerson, ColorStateList.valueOf(color))*/
+        /* estimatedDistanceTxtView.setTextColor(color)
+         estimatedTimeTextView.setTextColor(color)
+         textRating.setTextColor(color)
+         textType.setTextColor(color)
+         ImageViewCompat.setImageTintList(imgPerson, ColorStateList.valueOf(color))*/
     }
 
     private fun arrivedAtPickupLocation() {
@@ -611,20 +617,21 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         notifyClientLayout.visibility = View.VISIBLE
         btnStartTrip.isEnabled = true
         notifyClientProgressBar.max = Common.MAX_WAIT_TIME_IN_MINS * 60
-        driverWaitingTimer = object:CountDownTimer((notifyClientProgressBar.max * 1000).toLong(), 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                notifyClientProgressBar.progress += 1
-                val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished)
-                val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) -
-                        TimeUnit.MINUTES.toSeconds(minutes)
-                notifyClientTextView.text = String.format("%02d:%02d", minutes, seconds)
-            }
+        driverWaitingTimer =
+            object : CountDownTimer((notifyClientProgressBar.max * 1000).toLong(), 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    notifyClientProgressBar.progress += 1
+                    val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished)
+                    val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) -
+                            TimeUnit.MINUTES.toSeconds(minutes)
+                    notifyClientTextView.text = String.format("%02d:%02d", minutes, seconds)
+                }
 
-            override fun onFinish() {
-                doStartButtonAction()
-            }
+                override fun onFinish() {
+                    doStartButtonAction()
+                }
 
-        }.start()
+            }.start()
     }
 
     private fun arrivedAtDropOffLocation() {
@@ -643,9 +650,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                     homeViewModel.acceptActiveJob()
                 }
             }
+
             R.id.startButton -> {
                 doStartButtonAction()
             }
+
             R.id.completeTripButton -> {
                 if (homeViewModel.hasJob()) {
                     jobAcceptView.visibility = View.INVISIBLE

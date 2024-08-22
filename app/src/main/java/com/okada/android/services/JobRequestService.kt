@@ -4,6 +4,7 @@ package com.okada.rider.android.services
 import android.location.Location
 import com.okada.android.data.model.AppLocation
 import com.okada.android.data.model.JobInfoModel
+import com.okada.android.data.model.enum.JobStatus
 
 interface JobRequestService {
 
@@ -16,6 +17,12 @@ interface JobRequestService {
     fun acceptJob(
         jobId: String,
         currentDriverLocation: AppLocation,
+        completion: (Result<Unit>) -> Unit
+    )
+
+    fun updateJobStatus(
+        jobId: String,
+        jobStatus: JobStatus,
         completion: (Result<Unit>) -> Unit
     )
 

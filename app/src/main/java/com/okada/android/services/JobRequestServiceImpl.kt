@@ -57,6 +57,26 @@ class JobRequestServiceImpl : JobRequestService {
         }
     }
 
+    override fun updateJobStatus(
+        jobId: String,
+        jobStatus: JobStatus,
+        completion: (Result<Unit>) -> Unit
+    ) {
+        val values: MutableMap<String, Any> = HashMap()
+        values["status"] = jobStatus.toString()
+        jobsRef.child(jobId).updateChildren(values).addOnCompleteListener {
+            if (it.isSuccessful) {
+                completion(Result.success(Unit))
+            } else {
+                it.exception?.also { exception ->
+                    completion(Result.failure(exception))
+                } ?: run {
+                    completion(Result.failure(Exception("Cannot change job status")))
+                }
+            }
+        }
+    }
+
     override fun updateJob(
         jobId: String,
         currentDriverLocation: AppLocation,

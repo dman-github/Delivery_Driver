@@ -14,6 +14,7 @@ import com.okada.android.data.DirectionsUsecase
 import com.okada.android.data.JobRequestUsecase
 import com.okada.android.data.ProfileUsecase
 import com.okada.android.data.model.SelectedPlaceModel
+import com.okada.android.data.model.enum.JobStatus
 
 class HomeViewModel(
     private val accountUsecase: AccountUsecase,
@@ -263,22 +264,15 @@ class HomeViewModel(
 
     fun startActiveJob() {
         _model.jobStarted = true
-        /*_model.lastLocation?.let { loc ->
-            _model.uid?.let { uid ->
-                jobRequestUsecase.acceptJobRequest(loc) { result ->
-                    result.fold(onSuccess = { job ->
-                        Log.i("App_Info", "Job plan accepted -> Remove location")
-                        _model.curentJobInfo = job
-                        _model.acceptJob = true
-                        _acceptedJob.value = true
-                        locationUsecase.removeLocationFor(uid)
-                    }, onFailure = {
-                        // Error occurred
-                        _showSnackbarMessage.value = "Job information not found $it.message"
-                    })
-                }
-            }
-        }*/
+        jobRequestUsecase.updateJobStatusRequest(JobStatus.IN_PROGRESS) { result ->
+            result.fold(onSuccess = { job ->
+                Log.i("App_Info", "Job plan in-progress ")
+                _model.curentJobInfo = job
+            }, onFailure = {
+                // Error occurred
+                _showSnackbarMessage.value = "Job information not found $it.message"
+            })
+        }
     }
 
     private fun compareDistanceToDest(

@@ -7,6 +7,7 @@ import com.google.firebase.database.ValueEventListener
 import com.okada.android.data.model.AppLocation
 import com.okada.android.data.model.JobInfoModel
 import com.okada.android.data.model.TokenModel
+import com.okada.android.data.model.enum.JobStatus
 import com.okada.android.services.DataService
 import com.okada.android.services.DriverRequestService
 import com.okada.rider.android.services.JobRequestService
@@ -67,6 +68,27 @@ class JobRequestUsecase(
             // Driver is changed to the new driver
             jobRequestService.acceptJob(jobId,
                 AppLocation(location.latitude, location.longitude)) { result ->
+                result.fold(onSuccess = {
+                    jobRequestService.fetchCurrentJob(jobId) { result ->
+                        result.fold(onSuccess = {
+                            completion(Result.success(it))
+                        }, onFailure = {
+                            // Error occurred
+                            completion(Result.failure(it))
+                        })
+                    }
+                }, onFailure = {
+                    // Error occurred
+                    completion(Result.failure(it))
+                })
+            }
+        }
+    }
+
+    fun updateJobStatusRequest(jobStatus: JobStatus, completion: (Result<JobInfoModel>) -> Unit) {
+        activeJobId?.let { jobId ->
+            // Driver is changed to the new driver
+            jobRequestService.updateJobStatus(jobId,jobStatus) { result ->
                 result.fold(onSuccess = {
                     jobRequestService.fetchCurrentJob(jobId) { result ->
                         result.fold(onSuccess = {
