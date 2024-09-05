@@ -7,12 +7,16 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 import com.okada.android.Common
 import com.okada.android.data.LocationUsecase
 import com.okada.android.data.AccountUsecase
 import com.okada.android.data.DirectionsUsecase
 import com.okada.android.data.JobRequestUsecase
 import com.okada.android.data.ProfileUsecase
+import com.okada.android.data.model.JobInfoModel
 import com.okada.android.data.model.SelectedPlaceModel
 import com.okada.android.data.model.enum.JobStatus
 
@@ -45,6 +49,9 @@ class HomeViewModel(
 
     private val _declinedJob = MutableLiveData<Boolean>()
     val declinedJob: LiveData<Boolean> = _declinedJob
+
+    private val _jobCancelled = MutableLiveData<Boolean>()
+    val jobCancelled: LiveData<Boolean> = _jobCancelled
 
     private val _arrivedAtPickup = MutableLiveData<Boolean>()
     val arrivedAtPickup: LiveData<Boolean> = _arrivedAtPickup
@@ -246,7 +253,21 @@ class HomeViewModel(
     fun acceptActiveJob() {
         _model.lastLocation?.let { loc ->
             _model.uid?.let { uid ->
-                jobRequestUsecase.acceptJobRequest(loc) { result ->
+                jobRequestUsecase.acceptJobRequest(loc,
+                    object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            if (snapshot.exists()) {
+                                snapshot.getValue(JobInfoModel::class.java)?.also { job ->
+                                    checkJobStatus(job.status!!)
+                                }
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            _showSnackbarMessage.value = "Error creating listener: $error"
+                        }
+
+                    }) { result ->
                     result.fold(onSuccess = { job ->
                         Log.i("App_Info", "Job plan accepted -> Remove location")
                         _model.curentJobInfo = job
@@ -262,17 +283,50 @@ class HomeViewModel(
         }
     }
 
+    private fun checkJobStatus(jobStatus: JobStatus) {
+        Log.i("App_Info", "Check job status: $jobStatus")
+        when (jobStatus) {
+            JobStatus.CANCELLED -> {
+                jobHasBeenCancelled()
+            }
+            else -> {
+                //Do nothing
+            }
+        }
+    }
+
     fun startActiveJob() {
         _model.jobStarted = true
-        jobRequestUsecase.updateJobStatusRequest(JobStatus.IN_PROGRESS) { result ->
+        jobRequestUsecase.fetchJobRequest { result ->
             result.fold(onSuccess = { job ->
-                Log.i("App_Info", "Job plan in-progress ")
                 _model.curentJobInfo = job
+                // Check if job is not cancelled
+                if (job.status != JobStatus.CANCELLED) {
+                    jobRequestUsecase.updateJobStatusRequest(JobStatus.IN_PROGRESS) { result ->
+                        result.fold(onSuccess = { job ->
+                            Log.i("App_Info", "Job plan in-progress ")
+                            _model.curentJobInfo = job
+                        }, onFailure = {
+                            // Error occurred
+                            _showSnackbarMessage.value = "Job information not found $it.message"
+                        })
+                    }
+                } else {
+                    jobHasBeenCancelled()
+                }
             }, onFailure = {
                 // Error occurred
                 _showSnackbarMessage.value = "Job information not found $it.message"
             })
         }
+    }
+
+
+    fun jobHasBeenCancelled() {
+        _model.clearJobState()
+        _showSnackbarMessage.value =
+            "Job has been cancelled by the user"
+        _jobCancelled.value = true
     }
 
     private fun compareDistanceToDest(
@@ -316,5 +370,6 @@ class HomeViewModel(
             }
         }
     }
+
 
 }

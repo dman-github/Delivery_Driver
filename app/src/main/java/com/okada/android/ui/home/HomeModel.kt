@@ -20,4 +20,12 @@ class HomeModel {
     fun hasAcceptedJob(): Boolean  {
         return curentJobInfo != null && acceptJob
     }
+
+    fun clearJobState() {
+        curentJobInfo = null
+        currentJobClient = null
+        acceptJob = false
+        arrivalNotificationSent = false
+        jobStarted = false
+    }
 }

@@ -2,6 +2,7 @@ package com.okada.rider.android.services
 
 
 import android.location.Location
+import com.google.firebase.database.ValueEventListener
 import com.okada.android.data.model.AppLocation
 import com.okada.android.data.model.JobInfoModel
 import com.okada.android.data.model.enum.JobStatus
@@ -16,6 +17,7 @@ interface JobRequestService {
 
     fun acceptJob(
         jobId: String,
+        listener: ValueEventListener,
         currentDriverLocation: AppLocation,
         completion: (Result<Unit>) -> Unit
     )
@@ -32,8 +34,10 @@ interface JobRequestService {
         completion: (Result<Unit>) -> Unit
     )
 
-    fun fetchCurrentJob(jobId: String,
-                        completion: (Result<JobInfoModel>) -> Unit)
+    fun fetchCurrentJob(
+        jobId: String,
+        completion: (Result<JobInfoModel>) -> Unit
+    )
 
     fun removeJobListener()
 

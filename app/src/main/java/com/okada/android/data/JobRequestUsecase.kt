@@ -63,10 +63,11 @@ class JobRequestUsecase(
         }
     }
 
-    fun acceptJobRequest(location: Location, completion: (Result<JobInfoModel>) -> Unit) {
+    fun acceptJobRequest(location: Location,listener: ValueEventListener,
+                         completion: (Result<JobInfoModel>) -> Unit) {
         activeJobId?.let { jobId ->
             // Driver is changed to the new driver
-            jobRequestService.acceptJob(jobId,
+            jobRequestService.acceptJob(jobId,listener,
                 AppLocation(location.latitude, location.longitude)) { result ->
                 result.fold(onSuccess = {
                     jobRequestService.fetchCurrentJob(jobId) { result ->

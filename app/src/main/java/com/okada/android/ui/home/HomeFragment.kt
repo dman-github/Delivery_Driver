@@ -194,6 +194,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 }
             })
 
+        homeViewModel.jobCancelled.observe(viewLifecycleOwner,
+            Observer { cancelled ->
+                if (cancelled) {
+                    jobPlanCancelled()
+                }
+            })
+
         homeViewModel.declinedJob.observe(viewLifecycleOwner,
             Observer { accepted ->
                 if (accepted) {
@@ -578,6 +585,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         jobPreviewView.visibility = View.INVISIBLE
     }
 
+    private fun jobPlanCancelled() {
+        setLayoutProcess(false)
+        jobAcceptView.visibility = View.INVISIBLE
+        acceptView.visibility = View.INVISIBLE
+        jobPreviewView.visibility = View.INVISIBLE
+        stopAnimation()
+        mMap.clear()
+    }
+
     private fun jobPlanDeclined() {
         setLayoutProcess(false)
         jobAcceptView.visibility = View.INVISIBLE
@@ -646,7 +662,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                     jobPreviewView.visibility = View.GONE
                     requestObservable?.dispose()
                     circularProgressBar.progress = 0f
-                    Log.i("App_Info", "Job plan accepted")
+                    Log.i("App_Info", "Job plan accepted on click pressed")
                     homeViewModel.acceptActiveJob()
                 }
             }

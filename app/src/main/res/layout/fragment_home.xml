@@ -21,9 +21,9 @@
         android:textColor="?colorOnSecondary"
         android:visibility="gone"
         app:chipBackgroundColor="?colorSecondary"
-        app:chipIcon="@drawable/decline"
+        app:chipIcon="@drawable/tick"
         app:chipIconTint="?colorOnSecondary"
-        tools:visibility="gone" />
+        tools:visibility="visible" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/layout_accept"
@@ -138,7 +138,7 @@
         android:visibility="gone"
         app:cardBackgroundColor="?colorPrimary"
         app:cardCornerRadius="8dp"
-        tools:visibility="visible">
+        tools:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"

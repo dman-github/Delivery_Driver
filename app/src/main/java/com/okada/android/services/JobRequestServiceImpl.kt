@@ -1,6 +1,7 @@
 package com.okada.rider.android.services
 
 import android.location.Location
+import android.util.Log
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -15,7 +16,7 @@ import com.okada.android.data.model.enum.JobStatus
 class JobRequestServiceImpl : JobRequestService {
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
     private val jobsRef: DatabaseReference = database.getReference("Jobs")
-    private val jobListener: ChildEventListener? = null
+    private var jobListener: ValueEventListener? = null
     private lateinit var newJobRef: DatabaseReference
 
     override fun declineJob(
@@ -38,6 +39,7 @@ class JobRequestServiceImpl : JobRequestService {
 
     override fun acceptJob(
         jobId: String,
+        listener: ValueEventListener,
         currentDriverLocation: AppLocation,
         completion: (Result<Unit>) -> Unit
     ) {
@@ -46,7 +48,14 @@ class JobRequestServiceImpl : JobRequestService {
         values["status"] = JobStatus.ACCEPTED.toString()
         jobsRef.child(jobId).updateChildren(values).addOnCompleteListener {
             if (it.isSuccessful) {
+                // remove any listeners already added
+                removeJobListener()
+                // Add an event listener for the job object
+                newJobRef = jobsRef.child(jobId)
+                newJobRef.addValueEventListener(listener)
+                jobListener = listener
                 completion(Result.success(Unit))
+                Log.i("App_Info", "JobReqestService Impl acceptJob, ${newJobRef}")
             } else {
                 it.exception?.also { exception ->
                     completion(Result.failure(exception))
@@ -122,6 +131,7 @@ class JobRequestServiceImpl : JobRequestService {
     override fun removeJobListener() {
         jobListener?.let { listener ->
             newJobRef.removeEventListener(listener)
+            Log.i("App_Info", "JobReqestService Remove listener")
         }
     }
 }
