@@ -176,4 +176,10 @@ class JobRequestUsecase(
             }
         })
     }
+
+    fun removeJobListeners() {
+        jobRequestService.removeJobListener()
+    }
+
+
 }

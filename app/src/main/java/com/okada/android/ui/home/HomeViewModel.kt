@@ -323,10 +323,13 @@ class HomeViewModel(
 
 
     fun jobHasBeenCancelled() {
+        _model.curentJobInfo?.let {
+            _showSnackbarMessage.value =
+                "Job has been cancelled by the user"
+            _jobCancelled.value = true
+            jobRequestUsecase.removeJobListeners()
+        }
         _model.clearJobState()
-        _showSnackbarMessage.value =
-            "Job has been cancelled by the user"
-        _jobCancelled.value = true
     }
 
     private fun compareDistanceToDest(
