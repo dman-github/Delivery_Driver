@@ -138,7 +138,7 @@
         android:visibility="gone"
         app:cardBackgroundColor="?colorPrimary"
         app:cardCornerRadius="8dp"
-        tools:visibility="gone">
+        tools:visibility="visble">
 
         <LinearLayout
             android:layout_width="match_parent"

@@ -630,10 +630,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
     private fun arrivedAtPickupLocation() {
         setLayoutProcess(false)
-        notifyClientLayout.visibility = View.VISIBLE
+        notifyClientLayout.visibility = View.GONE
         btnStartTrip.isEnabled = true
         notifyClientProgressBar.max = Common.MAX_WAIT_TIME_IN_MINS * 60
-        driverWaitingTimer =
+        /*driverWaitingTimer =
             object : CountDownTimer((notifyClientProgressBar.max * 1000).toLong(), 1000) {
                 override fun onTick(millisUntilFinished: Long) {
                     notifyClientProgressBar.progress += 1
@@ -648,6 +648,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 }
 
             }.start()
+            */
     }
 
     private fun arrivedAtDropOffLocation() {
