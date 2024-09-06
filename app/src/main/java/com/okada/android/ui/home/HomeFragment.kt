@@ -592,6 +592,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         jobPreviewView.visibility = View.INVISIBLE
         stopAnimation()
         mMap.clear()
+        // send the last location to the DB as the driver is now free to take another job
+        fetchLastLocation()
     }
 
     private fun jobPlanDeclined() {
