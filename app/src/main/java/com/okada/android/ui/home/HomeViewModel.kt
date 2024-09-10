@@ -250,6 +250,32 @@ class HomeViewModel(
         }
     }
 
+    fun completeActiveJob() {
+        jobRequestUsecase.updateJobStatusRequest(JobStatus.COMPLETED) { result ->
+            result.fold(onSuccess = { jobRequestModel ->
+                _model.curentJobInfo = jobRequestModel
+                _model.curentJobInfo?.clientUid?.let { clientUid ->
+                    _model.uid?.let { driverUid ->
+                        Log.i("App_Info", "HomeViewModel sending driver Complete push notification")
+                        jobRequestUsecase.sendDriverJobCompletedRequest(driverUid, clientUid) { result ->
+                            result.fold(onSuccess = {
+                                // Do nothing
+                            }, onFailure = {
+                                // Error occurred
+                                _showSnackbarMessage.value =
+                                    "Cannot send complete job notification to client: $it.message"
+                            })
+                        }
+
+                    }
+                }
+            }, onFailure = {
+                // Error occurred
+                _showSnackbarMessage.value = "Job information cannot be updated $it.message"
+            })
+        }
+    }
+
     fun acceptActiveJob() {
         _model.lastLocation?.let { loc ->
             _model.uid?.let { uid ->
@@ -283,17 +309,6 @@ class HomeViewModel(
         }
     }
 
-    private fun checkJobStatus(jobStatus: JobStatus) {
-        Log.i("App_Info", "Check job status: $jobStatus")
-        when (jobStatus) {
-            JobStatus.CANCELLED -> {
-                jobHasBeenCancelled()
-            }
-            else -> {
-                //Do nothing
-            }
-        }
-    }
 
     fun startActiveJob() {
         _model.jobStarted = true
@@ -330,6 +345,19 @@ class HomeViewModel(
             jobRequestUsecase.removeJobListeners()
         }
         _model.clearJobState()
+    }
+
+    private fun checkJobStatus(jobStatus: JobStatus) {
+        Log.i("App_Info", "Check job status: $jobStatus")
+        when (jobStatus) {
+            JobStatus.CANCELLED -> {
+                jobHasBeenCancelled()
+            }
+
+            else -> {
+                //Do nothing
+            }
+        }
     }
 
     private fun compareDistanceToDest(

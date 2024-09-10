@@ -177,6 +177,39 @@ class JobRequestUsecase(
         })
     }
 
+    fun sendDriverJobCompletedRequest(
+        driverUid: String,
+        clientUid: String,
+        completion: (Result<Unit>) -> Unit
+    ) {
+        dataService.retrievePushMessagingToken(clientUid, object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (!snapshot.hasChildren()) {
+                    completion(Result.failure(Exception("No Push token")))
+                } else {
+                    snapshot.getValue(TokenModel::class.java)?.let { model ->
+                        driverRequestService.sendDriverCompleteRequest(
+                            model.token,
+                            driverUid
+                        ) { result ->
+                            result.fold(onSuccess = {
+                                // Notification sent
+                                completion(Result.success(Unit))
+                            }, onFailure = {
+                                // Error occurred
+                                completion(Result.failure(it))
+                            })
+                        }
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                completion(Result.failure(error.toException()))
+            }
+        })
+    }
+
     fun removeJobListeners() {
         jobRequestService.removeJobListener()
     }

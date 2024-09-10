@@ -80,6 +80,7 @@ object Common {
     val REQUEST_DRIVER_MSG_TITLE: String = "Driver requested!"
     val DECLINE_REQUEST_MSG_TITLE: String = "Request Cancelled!"
     val DRIVER_ARRIVED_REQUEST_MSG_TITLE: String = "Driver has Arrived!"
+    val JOB_COMPLETED_REQUEST_MSG_TITLE: String = "Job Completed!"
     val MIN_DISTANCE_TO_DESIRED_LOCATION: Int = 50
     val MAX_WAIT_TIME_IN_MINS: Int = 1
 }

@@ -12,4 +12,10 @@ interface DriverRequestService {
         uid: String,
         completion: (Result<Unit>) -> Unit
     )
+
+    fun sendDriverCompleteRequest(
+        pushToken: String,
+        uid: String,
+        completion: (Result<Unit>) -> Unit
+    )
 }

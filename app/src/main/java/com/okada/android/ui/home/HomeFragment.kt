@@ -683,6 +683,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                         requireContext(),
                         "Job completed!!!!!", Toast.LENGTH_SHORT
                     ).show();
+                    homeViewModel.clearMessage()
+                    homeViewModel.completeActiveJob()
                 }
             }
         }
