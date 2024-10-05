@@ -289,8 +289,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         if (EventBus.getDefault().hasSubscriberForEvent(SelectedPlaceModel::class.java))
             EventBus.getDefault().removeStickyEvent(SelectedPlaceModel::class.java)
         EventBus.getDefault().unregister(this)
-        valueAnimator.end()
-        valueAnimator.cancel()
+        if (valueAnimator != null) {
+            valueAnimator.end()
+            valueAnimator.cancel()
+        }
     }
 
     override fun onDestroyView() {
