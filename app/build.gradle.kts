@@ -6,6 +6,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -16,8 +17,8 @@ android {
         applicationId = "com.okada.android"
         minSdk = 24
         targetSdk = 34
-        versionCode = 10
-        versionName = "2.8"
+        versionCode = 15
+        versionName = "2.13"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -139,4 +140,8 @@ dependencies {
 
     //Loading button
     implementation("com.github.leandroborgesferreira:loading-button-android:2.3.0")
+
+    //Crashlytics
+    implementation("com.google.firebase:firebase-crashlytics:19.2.1")
+    implementation("com.google.firebase:firebase-analytics:22.1.2")
 }
