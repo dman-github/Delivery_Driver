@@ -82,10 +82,6 @@ class HomeViewModel(
         _showSnackbarMessage.value = null
     }
 
-    fun setActiveJob(jobId: String) {
-        jobRequestUsecase.setCurrentJobId(jobId)
-    }
-
     fun hasJob(): Boolean {
         return jobRequestUsecase.hasActiveJob
     }
@@ -204,18 +200,15 @@ class HomeViewModel(
     }
 
     fun declineActiveJob() {
-        if (jobRequestUsecase.hasActiveJob) {
             jobRequestUsecase.declineActiveJobRequest { result ->
                 result.fold(onSuccess = {
                     // Push done
                     _showSnackbarMessage.value = "active request declined"
                     _declinedJob.value = true
                 }, onFailure = {
-                    // Error occurred
-                    _showSnackbarMessage.value = it.message
+                    _showSnackbarMessage.value = "Active job cleared: $it.message"
                 })
             }
-        }
     }
 
     fun declineOtherJob(jobId: String) {
@@ -230,7 +223,8 @@ class HomeViewModel(
         }
     }
 
-    fun retrieveActiveJob() {
+    fun retrieveActiveJob(jobId: String) {
+        jobRequestUsecase.setCurrentJobId(jobId)
         jobRequestUsecase.fetchJobRequest() { result ->
             result.fold(onSuccess = { jobRequestModel ->
                 profileUsecase.fetchClientInfo(jobRequestModel.clientUid!!) { result ->
@@ -241,11 +235,15 @@ class HomeViewModel(
                     }, onFailure = {
                         // Error occurred
                         _showSnackbarMessage.value = "Client information not found"
+                        Log.i("App_Info", "Client information not found")
+                        jobRequestUsecase.clearJob()
                     })
                 }
             }, onFailure = {
                 // Error occurred
                 _showSnackbarMessage.value = "Job information not found $it.message"
+                Log.i("App_Info", "Job information not found $it.message")
+                jobRequestUsecase.clearJob()
             })
         }
     }
@@ -352,8 +350,8 @@ class HomeViewModel(
         when (jobStatus) {
             JobStatus.CANCELLED -> {
                 jobHasBeenCancelled()
+                jobRequestUsecase.clearJob()
             }
-
             else -> {
                 //Do nothing
             }

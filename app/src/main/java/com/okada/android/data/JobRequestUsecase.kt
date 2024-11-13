@@ -23,49 +23,53 @@ class JobRequestUsecase(
     val hasActiveJob: Boolean
         get() = activeJobId != null
 
+    fun clearJob() {
+        activeJobId = null
+    }
 
     fun setCurrentJobId(jobId: String) {
         activeJobId = jobId
     }
 
-
     fun declineJobRequest(jobId: String, completion: (Result<Unit>) -> Unit) {
         // The job request for this jobId is declined
         // This can be the current active job , or any other jobs that are received while the driver is having an active Job
         jobRequestService.declineJob(jobId) { result ->
-            result.fold(onSuccess = {
+           // result.fold(onSuccess = {
                 if (activeJobId == jobId) {
                     // if the active job is declined, set it to null
                     activeJobId = null
                 }
                 completion(Result.success(Unit))
-            }, onFailure = {
+           // }, onFailure = {
                 // Error occurred
-                completion(Result.failure(it))
-            })
+           //     completion(Result.failure(it))
+           // })
         }
     }
 
     fun declineActiveJobRequest(completion: (Result<Unit>) -> Unit) {
-        activeJobId?.let { jobId ->
+        activeJobId?.also { jobId ->
             // The job request for this jobId is declined
             // This can be the current active job , or any other jobs that are received while the driver is having an active Job
             jobRequestService.declineJob(jobId) { result ->
-                result.fold(onSuccess = {
+                //result.fold(onSuccess = {
                     // if the active job is declined, set it to null
                     activeJobId = null
                     completion(Result.success(Unit))
-                }, onFailure = {
+                //}, onFailure = {
                     // Error occurred
-                    completion(Result.failure(it))
-                })
+                 //   completion(Result.failure(it))
+                //})
             }
+        } ?: run {
+            completion(Result.success(Unit))
         }
     }
 
     fun acceptJobRequest(location: Location,listener: ValueEventListener,
                          completion: (Result<JobInfoModel>) -> Unit) {
-        activeJobId?.let { jobId ->
+        activeJobId?.also { jobId ->
             // Driver is changed to the new driver
             jobRequestService.acceptJob(jobId,listener,
                 AppLocation(location.latitude, location.longitude)) { result ->
@@ -87,7 +91,7 @@ class JobRequestUsecase(
     }
 
     fun updateJobStatusRequest(jobStatus: JobStatus, completion: (Result<JobInfoModel>) -> Unit) {
-        activeJobId?.let { jobId ->
+        activeJobId?.also { jobId ->
             // Driver is changed to the new driver
             jobRequestService.updateJobStatus(jobId,jobStatus) { result ->
                 result.fold(onSuccess = {
@@ -109,7 +113,7 @@ class JobRequestUsecase(
 
 
     fun fetchJobRequest(completion: (Result<JobInfoModel>) -> Unit) {
-        activeJobId?.let { jobId ->
+        activeJobId?.also { jobId ->
             // Fetch the details of th job
             jobRequestService.fetchCurrentJob(jobId) { result ->
                 result.fold(onSuccess = {
@@ -123,7 +127,7 @@ class JobRequestUsecase(
     }
 
     fun updateJobRequest(location: Location, completion: (Result<JobInfoModel>) -> Unit) {
-        activeJobId?.let { jobId ->
+        activeJobId?.also { jobId ->
             // Driver is changed to the new driver
             jobRequestService.updateJob(jobId,
                 AppLocation(location.latitude, location.longitude)) { result ->

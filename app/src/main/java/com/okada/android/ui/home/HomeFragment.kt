@@ -419,12 +419,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onDriverRequest(jobId: String) {
-        Log.i("App_Info", "Job Push notification received")
         if (homeViewModel.hasJob()) {
+            Snackbar.make(requireView(), "New Job Rejected", Snackbar.LENGTH_LONG)
+                .show()
+            Log.i("App_Info", "New Job Rejected")
             homeViewModel.declineOtherJob(jobId)
         } else {
-            homeViewModel.setActiveJob(jobId)
-            homeViewModel.retrieveActiveJob()
+            Snackbar.make(requireView(), "New Job arrived", Snackbar.LENGTH_LONG)
+                .show()
+            Log.i("App_Info", "New Job arrived")
+            homeViewModel.retrieveActiveJob(jobId)
         }
     }
 
