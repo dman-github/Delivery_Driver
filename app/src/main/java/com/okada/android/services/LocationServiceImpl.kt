@@ -5,9 +5,12 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.firebase.geofire.GeoFire
 import com.firebase.geofire.GeoLocation
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -70,6 +73,7 @@ class LocationServiceImpl : LocationService {
         address?.let {
             val geocodeLocation = getCountryCodeComponent(address) + "_" + getGeocodeComponent(address)
             currentUserLocationRef = databaseRefUserLocations.child(geocodeLocation).child(uid)
+            setOnDisconnect(currentUserLocationRef)
             geoFireRef = GeoFire(databaseRefUserLocations.child(geocodeLocation))
             geoFireRef.setLocation(
                 uid, GeoLocation(newLocation.latitude, newLocation.longitude)
@@ -116,6 +120,21 @@ class LocationServiceImpl : LocationService {
         }
 
         override fun onCancelled(error: DatabaseError) {
+        }
+    }
+
+    fun setOnDisconnect(ref: DatabaseReference) {
+        // Clear any prior onDisconnect handlers before setting a new one
+        ref.onDisconnect().cancel().addOnCompleteListener {
+            ref.onDisconnect().removeValue().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.i("App_Info", "LocationServiceImpl setOnDisconnect")
+                } else {
+                    task.exception?.let {
+
+                    }
+                }
+            }
         }
     }
 }
