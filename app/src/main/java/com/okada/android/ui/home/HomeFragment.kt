@@ -289,7 +289,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         if (EventBus.getDefault().hasSubscriberForEvent(SelectedPlaceModel::class.java))
             EventBus.getDefault().removeStickyEvent(SelectedPlaceModel::class.java)
         EventBus.getDefault().unregister(this)
-        if (valueAnimator != null) {
+        if (::valueAnimator.isInitialized) {
             valueAnimator.end()
             valueAnimator.cancel()
         }
