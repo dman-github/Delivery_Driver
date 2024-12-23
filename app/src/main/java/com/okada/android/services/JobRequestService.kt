@@ -40,7 +40,9 @@ interface JobRequestService {
     )
 
     fun getActiveJobsforDriver(driverUid: String,
-                               completion: (Result<List<Pair<String, JobInfoModel>>>) -> Unit)
+                               location: Location,
+                               listener: ValueEventListener,
+                               completion: (Result<Pair<String, JobInfoModel>>) -> Unit)
 
     fun removeJobListener()
 
