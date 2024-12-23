@@ -60,6 +60,9 @@ class HomeViewModel(
     private val _arrivedAtDropOff = MutableLiveData<Boolean>()
     val arrivedAtDropOff: LiveData<Boolean> = _arrivedAtDropOff
 
+    private val _resumeStartedJob = MutableLiveData<Boolean>()
+    val resumeStartedJob: LiveData<Boolean> = _resumeStartedJob
+
     private val _updateMapWithPlace = MutableLiveData<SelectedPlaceModel>()
     val updateMapWithPlace: LiveData<SelectedPlaceModel> = _updateMapWithPlace
 
@@ -265,6 +268,7 @@ class HomeViewModel(
                 jobStatusListener) { result ->
                 result.fold(onSuccess = { currentJob ->
                     _model.curentJobInfo = currentJob.second
+                    _model.acceptJob = true
                     jobRequestUsecase.setCurrentJobId(currentJob.first)
                     _model.curentJobInfo?.status?.also { status ->
                         checkJobStatus(status)
@@ -406,6 +410,10 @@ class HomeViewModel(
             JobStatus.IN_PROGRESS -> {
                 // Driver has reached pickup point and started the journey
                 // to the destination
+                _acceptedJob.value = true
+                _model.arrivalNotificationSent = true
+                _model.jobStarted = true
+                _resumeStartedJob.value = true
             }
             else -> {
                 //Do nothing

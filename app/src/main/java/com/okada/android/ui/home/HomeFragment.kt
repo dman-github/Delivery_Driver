@@ -187,6 +187,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 }
             })
 
+        homeViewModel.resumeStartedJob.observe(viewLifecycleOwner,
+            Observer { ifRxd ->
+                if (ifRxd) {
+                    doStartButtonAction(true)
+                }
+            })
+
         homeViewModel.acceptedJob.observe(viewLifecycleOwner,
             Observer { accepted ->
                 if (accepted) {
@@ -646,8 +653,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
     }
 
     private fun stopAnimation() {
-        valueAnimator.end()
-        valueAnimator.cancel()
+        if (::valueAnimator.isInitialized) {
+            valueAnimator.end()
+            valueAnimator.cancel()
+        }
     }
 
     private fun setLayoutProcess(show: Boolean) {
@@ -711,7 +720,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             }
 
             R.id.startButton -> {
-                doStartButtonAction()
+                doStartButtonAction(false)
             }
 
             R.id.completeTripButton -> {
@@ -730,7 +739,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         }
     }
 
-    fun doStartButtonAction() {
+    fun doStartButtonAction(resumed: Boolean) {
         if (homeViewModel.hasJob()) {
             stopAnimation()
             mMap.clear()
@@ -740,9 +749,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             notifyClientLayout.visibility = View.GONE
             btnCompleteTrip.visibility = View.VISIBLE
             btnCompleteTrip.isEnabled = false
-            Log.i("App_Info", "HomeFragment start button pressed")
+            Log.i("App_Info", "HomeFragment start button isResumed: ${resumed}")
             jobRequestShowPathToDestination()
-            homeViewModel.startActiveJob()
+            if (!resumed) {
+                homeViewModel.startActiveJob()
+            }
         }
     }
 
