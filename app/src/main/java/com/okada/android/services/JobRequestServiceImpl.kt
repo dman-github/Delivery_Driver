@@ -2,6 +2,7 @@ package com.okada.rider.android.services
 
 import android.location.Location
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -126,6 +127,51 @@ class JobRequestServiceImpl : JobRequestService {
                 completion(Result.failure(Exception("Cannot fetch Job")))
             }
         })
+    }
+
+    override fun getActiveJobsforDriver(driverUid: String,
+                               completion: (Result<List<Pair<String, JobInfoModel>>>) -> Unit) {
+        Log.i("App_Info", "Going to call api!")
+        /*jobsRef.child("OEW424a7vEEXiRyCeoM").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    snapshot.getValue(JobInfoModel::class.java)?.also { job ->
+                       // completion(Result.success(job))
+                        Log.i("App_Info", "YAY!")
+                    } ?: run {
+                        completion(Result.failure(Exception("Cannot fetch Job")))
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                completion(Result.failure(Exception("Cannot fetch Job: ${error}")))
+            }
+        })*/
+        /*jobsRef.orderByChild("driverUid").equalTo("LIU1e3GHZYUjXkgqCxfLtgLbx1h2").get().addOnSuccessListener { sn->
+            Log.i("App_Info", "${sn}")
+        }*/
+        // Get list of values that match the driverUid
+        jobsRef.orderByChild("driverUid").equalTo(FirebaseAuth.getInstance().currentUser?.uid)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val matchingJobs = mutableListOf<Pair<String, JobInfoModel>>()
+                    // Search through them to find jobs that are currently Active
+                    for (jobSnapshot in snapshot.children) {
+                        val jobInfo = jobSnapshot.getValue(JobInfoModel::class.java)
+                        if (jobInfo != null && jobInfo.status?.isActiveJob() == true) {
+                            val jobKey = jobSnapshot.key ?: continue
+                            matchingJobs.add(Pair(jobKey, jobInfo))
+                            Log.i("App_Info", "Job found : ${jobKey}")
+                        }
+                    }
+                    completion(Result.success(matchingJobs))
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    completion(Result.failure(Exception("Cannot fetch Job: ${error} for  ${FirebaseAuth.getInstance().currentUser?.uid}")))
+                }
+            })
     }
 
     override fun removeJobListener() {

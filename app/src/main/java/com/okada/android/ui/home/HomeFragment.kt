@@ -222,6 +222,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 }
             })
 
+        homeViewModel.fetchLastLocation.observe(viewLifecycleOwner,
+            Observer { fetch ->
+                if (fetch) {
+                    fetchLastLocation()
+                }
+            })
+
         // The google map builder
         locationRequest = LocationRequest.Builder(10000)
             .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
@@ -266,7 +273,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 locationCallback,
                 Looper.myLooper()
             )
-            fetchLastLocation()
+           // fetchLastLocation()
+            homeViewModel.retrieveCurrentJobInProgress()
         } else {
             Log.i("App_Info", "onResume  NO permissions")
         }
@@ -560,8 +568,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
         mMap.moveCamera(cameraUpdate)
         mMap.moveCamera(CameraUpdateFactory.zoomTo(mMap.cameraPosition!!.zoom - 1))
 
-        //Set layout visibility logic
-        if (model.forPickup!!) {
+        //Set layout visibility logic showing the Accept views
+        // This is not shown again if the job is already accepted
+        if (model.forPickup!! && !model.isAccepted!!) {
             acceptView.visibility = View.VISIBLE
             jobAcceptView.visibility = View.INVISIBLE
             jobPreviewView.visibility = View.VISIBLE
