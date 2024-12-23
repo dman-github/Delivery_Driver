@@ -222,12 +222,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 }
             })
 
-        homeViewModel.fetchLastLocation.observe(viewLifecycleOwner,
+        /*homeViewModel.fetchLastLocation.observe(viewLifecycleOwner,
             Observer { fetch ->
                 if (fetch) {
                     fetchLastLocation()
                 }
-            })
+            })*/
 
         // The google map builder
         locationRequest = LocationRequest.Builder(10000)
@@ -273,8 +273,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                 locationCallback,
                 Looper.myLooper()
             )
-           // fetchLastLocation()
-            homeViewModel.retrieveCurrentJobInProgress()
+            //fetchLastLocation()
+            Log.e("App_Info", "resumeJobInformation")
+            // check whether the map has loaded and mMap is valid
+            if (::mMap.isInitialized) {
+                resumeJobInformation()
+            }
         } else {
             Log.i("App_Info", "onResume  NO permissions")
         }
@@ -326,11 +330,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
             })
             //googleMap.setMapStyle(null)
             if (!success) {
-                Log.e("App_Error", "Style parsing error")
+                Log.e("App_Info", "Style parsing error")
             } else {
-                Log.e("App_Success", "Map loaded!")
+                Log.e("App_Info", "Map loaded!")
                 appRequiresPermission()
-                fetchLastLocation()
+                if (!homeViewModel.hasJob()) {
+                    resumeJobInformation()
+                }
             }
 
         } catch (e: Resources.NotFoundException) {
@@ -371,6 +377,25 @@ class HomeFragment : Fragment(), OnMapReadyCallback, EasyPermissions.PermissionC
                     ).show();
                 }.addOnSuccessListener { lastLocation ->
                     homeViewModel.updateLocation(lastLocation, requireContext())
+                }
+        }
+    }
+
+    private fun resumeJobInformation() {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            fusedLocationProviderClient
+                .lastLocation
+                .addOnFailureListener { e ->
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: $e", Toast.LENGTH_SHORT
+                    ).show();
+                }.addOnSuccessListener { lastLocation ->
+                    homeViewModel.retrieveCurrentJobInProgress(lastLocation, requireContext())
                 }
         }
     }
