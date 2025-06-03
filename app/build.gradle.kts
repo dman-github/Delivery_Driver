@@ -17,8 +17,8 @@ android {
         applicationId = "com.okada.android"
         minSdk = 24
         targetSdk = 34
-        versionCode = 15
-        versionName = "2.13"
+        versionCode = 16
+        versionName = "2.14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

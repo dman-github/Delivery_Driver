@@ -126,6 +126,23 @@ class JobRequestUsecase(
         }
     }
 
+    fun fetchActiveJobsforDriverRequest(driverUid: String,
+                                        location: Location,
+                                        listener: ValueEventListener,
+                                        completion: (Result<Pair<String, JobInfoModel>>) -> Unit) {
+            // Fetch the details of th job
+            jobRequestService.getActiveJobsforDriver(driverUid,
+                location,
+                listener) { result ->
+                result.fold(onSuccess = {
+                    completion(Result.success(it))
+                }, onFailure = {
+                    // Error occurred
+                    completion(Result.failure(it))
+                })
+            }
+    }
+
     fun updateJobRequest(location: Location, completion: (Result<JobInfoModel>) -> Unit) {
         activeJobId?.also { jobId ->
             // Driver is changed to the new driver

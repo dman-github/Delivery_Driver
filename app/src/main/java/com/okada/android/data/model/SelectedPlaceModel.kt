@@ -11,7 +11,8 @@ class SelectedPlaceModel(
     var distance: String? = null,
     var eventOrigin: LatLng? = null,
     var eventDest: LatLng? = null,
-    var forPickup: Boolean? = null
+    var forPickup: Boolean? = null,
+    var isAccepted: Boolean? = null
 ) {
 
 }

@@ -18,6 +18,7 @@ import com.okada.android.data.JobRequestUsecase
 import com.okada.android.data.ProfileUsecase
 import com.okada.android.data.model.JobInfoModel
 import com.okada.android.data.model.SelectedPlaceModel
+import com.okada.android.data.model.enum.AppException
 import com.okada.android.data.model.enum.JobStatus
 
 class HomeViewModel(
@@ -59,8 +60,14 @@ class HomeViewModel(
     private val _arrivedAtDropOff = MutableLiveData<Boolean>()
     val arrivedAtDropOff: LiveData<Boolean> = _arrivedAtDropOff
 
+    private val _resumeStartedJob = MutableLiveData<Boolean>()
+    val resumeStartedJob: LiveData<Boolean> = _resumeStartedJob
+
     private val _updateMapWithPlace = MutableLiveData<SelectedPlaceModel>()
     val updateMapWithPlace: LiveData<SelectedPlaceModel> = _updateMapWithPlace
+
+    //private val _fetchLastLocation = MutableLiveData<Boolean>()
+   // val fetchLastLocation: LiveData<Boolean> = _fetchLastLocation
 
 
     init {
@@ -130,6 +137,7 @@ class HomeViewModel(
                         result.onSuccess {
                             _model.lastLocation = location
                             _updateMap.value = newPos
+                            Log.i("App_Info", "Update job with location")
                             _showSnackbarMessage.value =
                                 "Location updated\nLat: ${location.latitude}, Lon: ${location.longitude}}"
                         }
@@ -156,43 +164,47 @@ class HomeViewModel(
     fun calculatePath(driverLocation: Location, forPickup: Boolean) {
         _model.curentJobInfo?.jobDetails?.pickupLocation?.let { pickupLocation ->
             _model.curentJobInfo?.jobDetails?.deliveryLocation?.let { deliveryLocation ->
-                val pickupAddress = _model.curentJobInfo?.jobDetails?.pickupAddress ?: ""
-                val deliveryAddress = _model.curentJobInfo?.jobDetails?.deliverAddress ?: ""
-                var addressStr = if (forPickup) pickupAddress else deliveryAddress
-                var endLocation = if (forPickup) pickupLocation else deliveryLocation
-                val requestedLocationStr =
-                    StringBuilder().append(endLocation.latitude).append(",")
-                        .append(endLocation.longitude).toString()
-                val driverLocationStr = StringBuilder().append(driverLocation.latitude).append(",")
-                    .append(driverLocation.longitude).toString()
-                //fetch directions between the 2 points from the Google directions api
-                Log.i("App_Info", "HomeViewModel calculate path getting directions")
-                directionsUsecase.getDirections(
-                    driverLocationStr,
-                    requestedLocationStr,
-                    _model.apiKey
-                ) { result ->
-                    result.onSuccess { placeModel ->
-                        try {
-                            placeModel.eventOrigin =
-                                LatLng(driverLocation.latitude, driverLocation.longitude)
-                            placeModel.eventDest = LatLng(
-                                requestedLocationStr.split(",")[0].toDouble(),
-                                requestedLocationStr.split(",")[1].toDouble()
-                            )
-                            placeModel.forPickup = forPickup
-                            placeModel.endAddress = addressStr
-                            Log.i(
-                                "App_Info",
-                                "HomeViewModel calculate path getting directions SUCCESS"
-                            )
-                            _updateMapWithPlace.value = placeModel
-                        } catch (e: Exception) {
-                            _showSnackbarMessage.value = e.message
+                _model.curentJobInfo?.status?.let { status ->
+                    val pickupAddress = _model.curentJobInfo?.jobDetails?.pickupAddress ?: ""
+                    val deliveryAddress = _model.curentJobInfo?.jobDetails?.deliverAddress ?: ""
+                    var addressStr = if (forPickup) pickupAddress else deliveryAddress
+                    var endLocation = if (forPickup) pickupLocation else deliveryLocation
+                    val requestedLocationStr =
+                        StringBuilder().append(endLocation.latitude).append(",")
+                            .append(endLocation.longitude).toString()
+                    val driverLocationStr =
+                        StringBuilder().append(driverLocation.latitude).append(",")
+                            .append(driverLocation.longitude).toString()
+                    //fetch directions between the 2 points from the Google directions api
+                    Log.i("App_Info", "HomeViewModel calculate path getting directions")
+                    directionsUsecase.getDirections(
+                        driverLocationStr,
+                        requestedLocationStr,
+                        _model.apiKey
+                    ) { result ->
+                        result.onSuccess { placeModel ->
+                            try {
+                                placeModel.eventOrigin =
+                                    LatLng(driverLocation.latitude, driverLocation.longitude)
+                                placeModel.eventDest = LatLng(
+                                    requestedLocationStr.split(",")[0].toDouble(),
+                                    requestedLocationStr.split(",")[1].toDouble()
+                                )
+                                placeModel.forPickup = forPickup
+                                placeModel.endAddress = addressStr
+                                placeModel.isAccepted = status.isActiveJob()
+                                Log.i(
+                                    "App_Info",
+                                    "HomeViewModel calculate path getting directions SUCCESS"
+                                )
+                                _updateMapWithPlace.value = placeModel
+                            } catch (e: Exception) {
+                                _showSnackbarMessage.value = e.message
+                            }
                         }
-                    }
-                    result.onFailure {
-                        _showSnackbarMessage.value = it.message
+                        result.onFailure {
+                            _showSnackbarMessage.value = it.message
+                        }
                     }
                 }
             }
@@ -248,6 +260,35 @@ class HomeViewModel(
         }
     }
 
+    fun retrieveCurrentJobInProgress(currentLoc: Location,
+                                     context: Context) {
+        _model.uid?.also { uid ->
+            jobRequestUsecase.fetchActiveJobsforDriverRequest(uid,
+                currentLoc,
+                jobStatusListener) { result ->
+                result.fold(onSuccess = { currentJob ->
+                    _model.curentJobInfo = currentJob.second
+                    _model.acceptJob = true
+                    jobRequestUsecase.setCurrentJobId(currentJob.first)
+                    _model.curentJobInfo?.status?.also { status ->
+                        checkJobStatus(status)
+                    }
+                }, onFailure = {
+                    if (it is AppException.Empty) {
+                        // Driver does not have an active job so just update the location as per normal
+                        updateLocation(currentLoc, context)
+                    } else {
+                        // Error occurred
+                        _showSnackbarMessage.value = "No active jobs found found $it.message"
+                        Log.i("App_Info", "No active jobs found found $it.message")
+                    }
+                })
+            }
+        } ?: run {
+            _showSnackbarMessage.value = "No logged in user"
+        }
+    }
+
     fun completeActiveJob() {
         jobRequestUsecase.updateJobStatusRequest(JobStatus.COMPLETED) { result ->
             result.fold(onSuccess = { jobRequestModel ->
@@ -277,21 +318,7 @@ class HomeViewModel(
     fun acceptActiveJob() {
         _model.lastLocation?.let { loc ->
             _model.uid?.let { uid ->
-                jobRequestUsecase.acceptJobRequest(loc,
-                    object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            if (snapshot.exists()) {
-                                snapshot.getValue(JobInfoModel::class.java)?.also { job ->
-                                    checkJobStatus(job.status!!)
-                                }
-                            }
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {
-                            _showSnackbarMessage.value = "Error creating listener: $error"
-                        }
-
-                    }) { result ->
+                jobRequestUsecase.acceptJobRequest(loc, jobStatusListener) { result ->
                     result.fold(onSuccess = { job ->
                         Log.i("App_Info", "Job plan accepted -> Remove location")
                         _model.curentJobInfo = job
@@ -304,6 +331,20 @@ class HomeViewModel(
                     })
                 }
             }
+        }
+    }
+
+    val jobStatusListener = object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            if (snapshot.exists()) {
+                snapshot.getValue(JobInfoModel::class.java)?.also { job ->
+                    checkJobStatusForCancellation(job.status!!)
+                }
+            }
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            _showSnackbarMessage.value = "Error creating listener: $error"
         }
     }
 
@@ -345,12 +386,34 @@ class HomeViewModel(
         _model.clearJobState()
     }
 
-    private fun checkJobStatus(jobStatus: JobStatus) {
-        Log.i("App_Info", "Check job status: $jobStatus")
+    private fun checkJobStatusForCancellation(jobStatus: JobStatus) {
+        Log.i("App_Info", "Check job status for cancellation: $jobStatus")
         when (jobStatus) {
             JobStatus.CANCELLED -> {
                 jobHasBeenCancelled()
                 jobRequestUsecase.clearJob()
+            }
+            else -> {
+                //Do nothing
+            }
+        }
+    }
+
+    private fun checkJobStatus(jobStatus: JobStatus) {
+        Log.i("App_Info", "Check job status: $jobStatus")
+        when (jobStatus) {
+            JobStatus.ACCEPTED -> {
+                // Driver is still getting to the pickup point
+                _acceptedJob.value = true
+                _activeJobRxd.value = true
+            }
+            JobStatus.IN_PROGRESS -> {
+                // Driver has reached pickup point and started the journey
+                // to the destination
+                _acceptedJob.value = true
+                _model.arrivalNotificationSent = true
+                _model.jobStarted = true
+                _resumeStartedJob.value = true
             }
             else -> {
                 //Do nothing
