@@ -18,6 +18,7 @@ import com.okada.android.data.JobRequestUsecase
 import com.okada.android.data.ProfileUsecase
 import com.okada.android.data.model.JobInfoModel
 import com.okada.android.data.model.SelectedPlaceModel
+import com.okada.android.data.model.enum.AppException
 import com.okada.android.data.model.enum.JobStatus
 
 class HomeViewModel(
@@ -59,11 +60,14 @@ class HomeViewModel(
     private val _arrivedAtDropOff = MutableLiveData<Boolean>()
     val arrivedAtDropOff: LiveData<Boolean> = _arrivedAtDropOff
 
+    private val _resumeStartedJob = MutableLiveData<Boolean>()
+    val resumeStartedJob: LiveData<Boolean> = _resumeStartedJob
+
     private val _updateMapWithPlace = MutableLiveData<SelectedPlaceModel>()
     val updateMapWithPlace: LiveData<SelectedPlaceModel> = _updateMapWithPlace
 
-    private val _fetchLastLocation = MutableLiveData<Boolean>()
-    val fetchLastLocation: LiveData<Boolean> = _fetchLastLocation
+    //private val _fetchLastLocation = MutableLiveData<Boolean>()
+   // val fetchLastLocation: LiveData<Boolean> = _fetchLastLocation
 
 
     init {
@@ -133,6 +137,7 @@ class HomeViewModel(
                         result.onSuccess {
                             _model.lastLocation = location
                             _updateMap.value = newPos
+                            Log.i("App_Info", "Update job with location")
                             _showSnackbarMessage.value =
                                 "Location updated\nLat: ${location.latitude}, Lon: ${location.longitude}}"
                         }
@@ -255,26 +260,28 @@ class HomeViewModel(
         }
     }
 
-    fun retrieveCurrentJobInProgress() {
+    fun retrieveCurrentJobInProgress(currentLoc: Location,
+                                     context: Context) {
         _model.uid?.also { uid ->
-            jobRequestUsecase.fetchActiveJobsforDriverRequest(uid) { result ->
-                result.fold(onSuccess = { jobList ->
-                    if (jobList.isEmpty()) {
-                        // Driver does not have an active job so just update the location as per normal
-                        _fetchLastLocation.value = true
-                    } else {
-                        // Choose the first, if we have many matches , i.e active jobs, we have a problem
-                        // We have to prevent the driver from accepting many jobs somehow
-                        _model.curentJobInfo = jobList.first().second
-                        jobRequestUsecase.setCurrentJobId(jobList.first().first)
-                        _model.curentJobInfo?.status?.also { status ->
-                            checkJobStatus(status)
-                        }
+            jobRequestUsecase.fetchActiveJobsforDriverRequest(uid,
+                currentLoc,
+                jobStatusListener) { result ->
+                result.fold(onSuccess = { currentJob ->
+                    _model.curentJobInfo = currentJob.second
+                    _model.acceptJob = true
+                    jobRequestUsecase.setCurrentJobId(currentJob.first)
+                    _model.curentJobInfo?.status?.also { status ->
+                        checkJobStatus(status)
                     }
                 }, onFailure = {
-                    // Error occurred
-                    _showSnackbarMessage.value = "No active jobs found found $it.message"
-                    Log.i("App_Info", "No active jobs found found $it.message")
+                    if (it is AppException.Empty) {
+                        // Driver does not have an active job so just update the location as per normal
+                        updateLocation(currentLoc, context)
+                    } else {
+                        // Error occurred
+                        _showSnackbarMessage.value = "No active jobs found found $it.message"
+                        Log.i("App_Info", "No active jobs found found $it.message")
+                    }
                 })
             }
         } ?: run {
@@ -311,21 +318,7 @@ class HomeViewModel(
     fun acceptActiveJob() {
         _model.lastLocation?.let { loc ->
             _model.uid?.let { uid ->
-                jobRequestUsecase.acceptJobRequest(loc,
-                    object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            if (snapshot.exists()) {
-                                snapshot.getValue(JobInfoModel::class.java)?.also { job ->
-                                    checkJobStatusForCancellation(job.status!!)
-                                }
-                            }
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {
-                            _showSnackbarMessage.value = "Error creating listener: $error"
-                        }
-
-                    }) { result ->
+                jobRequestUsecase.acceptJobRequest(loc, jobStatusListener) { result ->
                     result.fold(onSuccess = { job ->
                         Log.i("App_Info", "Job plan accepted -> Remove location")
                         _model.curentJobInfo = job
@@ -338,6 +331,20 @@ class HomeViewModel(
                     })
                 }
             }
+        }
+    }
+
+    val jobStatusListener = object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            if (snapshot.exists()) {
+                snapshot.getValue(JobInfoModel::class.java)?.also { job ->
+                    checkJobStatusForCancellation(job.status!!)
+                }
+            }
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            _showSnackbarMessage.value = "Error creating listener: $error"
         }
     }
 
@@ -380,7 +387,7 @@ class HomeViewModel(
     }
 
     private fun checkJobStatusForCancellation(jobStatus: JobStatus) {
-        Log.i("App_Info", "Check job status: $jobStatus")
+        Log.i("App_Info", "Check job status for cancellation: $jobStatus")
         when (jobStatus) {
             JobStatus.CANCELLED -> {
                 jobHasBeenCancelled()
@@ -403,6 +410,10 @@ class HomeViewModel(
             JobStatus.IN_PROGRESS -> {
                 // Driver has reached pickup point and started the journey
                 // to the destination
+                _acceptedJob.value = true
+                _model.arrivalNotificationSent = true
+                _model.jobStarted = true
+                _resumeStartedJob.value = true
             }
             else -> {
                 //Do nothing

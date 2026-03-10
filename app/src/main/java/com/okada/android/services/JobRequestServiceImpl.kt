@@ -11,6 +11,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.okada.android.data.model.AppLocation
 import com.okada.android.data.model.JobInfoModel
+import com.okada.android.data.model.enum.AppException
 import com.okada.android.data.model.enum.JobStatus
 
 
@@ -49,12 +50,7 @@ class JobRequestServiceImpl : JobRequestService {
         values["status"] = JobStatus.ACCEPTED.toString()
         jobsRef.child(jobId).updateChildren(values).addOnCompleteListener {
             if (it.isSuccessful) {
-                // remove any listeners already added
-                removeJobListener()
-                // Add an event listener for the job object
-                newJobRef = jobsRef.child(jobId)
-                newJobRef.addValueEventListener(listener)
-                jobListener = listener
+                addJobStatusListener(jobId, listener)
                 completion(Result.success(Unit))
                 Log.i("App_Info", "JobReqestService Impl acceptJob, ${newJobRef}")
             } else {
@@ -129,28 +125,13 @@ class JobRequestServiceImpl : JobRequestService {
         })
     }
 
-    override fun getActiveJobsforDriver(driverUid: String,
-                               completion: (Result<List<Pair<String, JobInfoModel>>>) -> Unit) {
+    override fun getActiveJobsforDriver(
+        driverUid: String,
+        loc: Location,
+        listener: ValueEventListener,
+        completion: (Result<Pair<String, JobInfoModel>>) -> Unit
+    ) {
         Log.i("App_Info", "Going to call api!")
-        /*jobsRef.child("OEW424a7vEEXiRyCeoM").addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    snapshot.getValue(JobInfoModel::class.java)?.also { job ->
-                       // completion(Result.success(job))
-                        Log.i("App_Info", "YAY!")
-                    } ?: run {
-                        completion(Result.failure(Exception("Cannot fetch Job")))
-                    }
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                completion(Result.failure(Exception("Cannot fetch Job: ${error}")))
-            }
-        })*/
-        /*jobsRef.orderByChild("driverUid").equalTo("LIU1e3GHZYUjXkgqCxfLtgLbx1h2").get().addOnSuccessListener { sn->
-            Log.i("App_Info", "${sn}")
-        }*/
         // Get list of values that match the driverUid
         jobsRef.orderByChild("driverUid").equalTo(FirebaseAuth.getInstance().currentUser?.uid)
             .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -165,13 +146,43 @@ class JobRequestServiceImpl : JobRequestService {
                             Log.i("App_Info", "Job found : ${jobKey}")
                         }
                     }
-                    completion(Result.success(matchingJobs))
+                    if (matchingJobs.size > 0) {
+                        // Choose the first, if we have many matches , i.e active jobs, we have a problem
+                        // We have to prevent the driver from accepting many jobs somehow
+                        val activejob = matchingJobs.first()
+                        val jobId = activejob.first
+                        // Update the Job with the driver's latest location and add the listener
+                        // to the status field
+                        addJobStatusListener(jobId, listener)
+                        updateJob(
+                            jobId,
+                            AppLocation(loc.latitude, loc.longitude)
+                        ) { result ->
+                            result.fold(onSuccess = {
+                                completion(Result.success(activejob))
+                            }, onFailure = {
+                                // Error occurred
+                                completion(Result.failure(it))
+                            })
+                        }
+                    } else {
+                        completion(Result.failure(AppException.Empty()))
+                    }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
                     completion(Result.failure(Exception("Cannot fetch Job: ${error} for  ${FirebaseAuth.getInstance().currentUser?.uid}")))
                 }
             })
+    }
+
+    private fun addJobStatusListener(jobId: String, listener: ValueEventListener) {
+        // remove any listeners already added
+        removeJobListener()
+        // Add an event listener for the job object
+        newJobRef = jobsRef.child(jobId)
+        newJobRef.addValueEventListener(listener)
+        jobListener = listener
     }
 
     override fun removeJobListener() {

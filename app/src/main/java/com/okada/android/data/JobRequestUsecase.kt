@@ -126,9 +126,14 @@ class JobRequestUsecase(
         }
     }
 
-    fun fetchActiveJobsforDriverRequest(driverUid: String, completion: (Result<List<Pair<String, JobInfoModel>>>) -> Unit) {
+    fun fetchActiveJobsforDriverRequest(driverUid: String,
+                                        location: Location,
+                                        listener: ValueEventListener,
+                                        completion: (Result<Pair<String, JobInfoModel>>) -> Unit) {
             // Fetch the details of th job
-            jobRequestService.getActiveJobsforDriver(driverUid) { result ->
+            jobRequestService.getActiveJobsforDriver(driverUid,
+                location,
+                listener) { result ->
                 result.fold(onSuccess = {
                     completion(Result.success(it))
                 }, onFailure = {
